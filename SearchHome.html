@@ -1,0 +1,100 @@
+<html>
+<head>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+	$("#submitBtn").click(function(){
+		$.post( "search", {"search":$("#searchBar").val()},
+			function( data ) {
+				$("#resultLst").html('<tr><th width="10%"></th><th width="15%">cosine similarity</th><th width="75%">sentence</th></tr>')
+				$.each(data,function(index,value){
+
+					row1=$("<tr>")
+					
+					cell1=$("<td>")
+					cell1.attr("style","vertical-align: top; padding-top: 10px")
+					abstract_btn=$("<button>")
+					abstract_btn.attr('class',"btn btn-outline-success")
+					abstract_btn.text("Paragraph")
+					cell1.append(abstract_btn)
+					
+					cell2=$("<td>")
+					cell2.text(value['cosine_similarity'])
+					cell2.attr("style","vertical-align: top; padding-top: 10px")
+
+					cell3=$("<td>")
+					cell3.text(value['sentence'])
+					cell3.attr("style","vertical-align: top; padding-top: 10px")
+
+					row1.append(cell1)
+					row1.append(cell2)
+					row1.append(cell3)
+					$("#resultLst").append(row1)
+
+					row2=$("<tr>")
+					cell4=$("<td>")
+					cell4.attr('colspan',3)
+					cell4.attr('style','padding-bottom: 10px')
+					abstract_p=$("<p>")
+					abstract_p.attr("id","abstract_"+index.toString())
+					abstract_p.append($('<br>')).append(
+                        $("<table>").append(
+                            $("<tr>").append(
+                                $("<td>").attr("style","width:10%; text-align:right; vertical-align:top; padding-right: 30px").text('Title')
+                            ).append(
+                                $("<td>").attr("style","padding-bottom: 10px").append(
+                                    $('<a target="_blank">').attr('href','https://www.ncbi.nlm.nih.gov/pmc/articles/'+value['pmcid']).text(value['title'])
+                                )
+                            )
+                        ).append(
+                            $("<tr>").append(
+                                $("<td>").attr("style","width:10%; text-align:right; vertical-align:top; padding-right: 30px").text('Citation')
+                            ).append(
+                                $("<td>").attr("style","padding-bottom: 10px").text(value['author_citation'])
+                            )
+                        ).append(
+                            $("<tr>").append(
+                                $("<td>").attr("style","width:10%; text-align:right; vertical-align:top; padding-right: 30px").text('Paragraph')
+                            ).append(
+                                $("<td>").attr("style","padding-bottom: 10px").text(value["paragraph"])
+                            )
+                        ).append(
+                            $("<tr>").append(
+                                $("<td>").attr("style","width:10%; text-align:right; vertical-align:top; padding-right: 30px").text('Type')
+                            ).append(
+                                $("<td>").attr("style","padding-bottom: 10px").text(value["type"])
+                            )
+                        )
+					)
+					cell4.append(abstract_p)
+					abstract_p.hide()
+
+					row2.append(cell4)
+					$("#resultLst").append(row2)
+
+					abstract_btn.click(function(){
+						$("#abstract_"+index.toString()).toggle()
+					});
+				});
+			}
+		);
+	});
+});
+</script>
+</head>
+<body>
+<form id="searchForm" class="d-flex" width="80%">
+	<input id="searchBar" class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search">
+</form>
+<button id="submitBtn" class="btn btn-outline-success">List</button>
+<table id="resultLst" width="80%"></table>
+</body>
+</html>
+
+
+
+
+
+
