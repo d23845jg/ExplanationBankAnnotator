@@ -45,12 +45,13 @@ class RetrieveFact:
 
         return [
             {'cosine_similarity':cos_sim[i],'sentence':self.breastcancer_facts_df.sentence[i],
-             'title':self.breastcancer_facts_df.title[i],'citation':self.breastcancer_facts_df.citation[i]
+             'title':self.breastcancer_facts_df.title[i],'citation':self.breastcancer_facts_df.citation[i],
+             'unique_id':self.breastcancer_facts_df.unique_id[i]
             }
             for i in heapq.nlargest(20,range(len(self.breastcancer_facts_df)),key=lambda i:cos_sim[i])
         ]
 
-retrieve_fact=RetrieveFact(fp='data/BreastCancerFacts.csv',sen_emb_fp='output/breastcancerfacts_embeddings.npy')
+retrieve_fact=RetrieveFact(fp='output/BreastCancerFacts.csv',sen_emb_fp='output/breastcancerfacts_embeddings.npy')
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import logging
