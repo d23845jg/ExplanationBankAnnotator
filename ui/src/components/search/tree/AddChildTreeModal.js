@@ -58,7 +58,7 @@ function AddChildTreeModal({openModal, handleSubmitModal, handleCloseModal}) {
       </form>
 
       <Button variant="contained" color="primary" endIcon={<AddCircleIcon />} onClick={() => {
-        handleSubmitModal({unique_id: '-1', sentence: fact});
+        handleSubmitModal({unique_id: '-1', statement: fact});
         setFact('');
       }}>
         Create

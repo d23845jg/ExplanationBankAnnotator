@@ -55,15 +55,12 @@ function SearchContent() {
     isLoading,
     isError
   } = useCancerQuery(query);
-
-  const facts_unique_id_list = data?.map((data) => data.unique_id);
   
   if (isLoading) {
     return (
       <div className={classes.loading}>
         <CircularProgress  />
       </div>
-      
     );
   } else if (isError) {
     return (
@@ -77,7 +74,7 @@ function SearchContent() {
   function addDataToGrid(data) {
     return (
       <Grid key={data.unique_id} item xs={6}>
-        <DataContent data={data} claim={query} fact_list={facts_unique_id_list}/>
+        <DataContent data={data} claim={query}/>
       </Grid>
     );
   }

@@ -43,18 +43,24 @@ class RetrieveFact:
         
         cos_sim=cosine_similarity(query_embedding,self.sentence_embeddings)[0].tolist()
 
+        def validate(value):
+            return value if not pd.isna(value) else 'NaN'
+
         return [
             {
-                'cosine_similarity':cos_sim[i],
-                'sentence':self.breastcancer_facts_df.sentence[i],
-                'title':self.breastcancer_facts_df.title[i],
-                'citation':self.breastcancer_facts_df.citation[i],
-                'unique_id':self.breastcancer_facts_df.unique_id[i]
+                'cosine_similarity': cos_sim[i],
+                'unique_id': self.breastcancer_facts_df.unique_id[i],
+                'statement': self.breastcancer_facts_df.statement[i],
+                'resource': self.breastcancer_facts_df.resource[i],
+                #'LoE/GoR':self.breastcancer_facts_df.LoE/GoR[i],
+                'consensus': validate(self.breastcancer_facts_df.consensus[i]),
+                'type': validate(self.breastcancer_facts_df.type[i]),
+                'section': validate(self.breastcancer_facts_df.section[i])
             }
             for i in heapq.nlargest(20,range(len(self.breastcancer_facts_df)),key=lambda i:cos_sim[i])
         ]
 
-retrieve_fact=RetrieveFact(fp='output/BreastCancerFacts.csv',sen_emb_fp='output/breastcancerfacts_embeddings.npy')
+retrieve_fact=RetrieveFact(fp='output/FactBank-0.2-BreastCancerFactBank.csv',sen_emb_fp='output/sentence_embeddings-0.2-BreastCancerFactBank.npy')
 
 # HTTP SERVER ------------------------------------------------------------------------------------------------------------------------------------------
 from http.server import BaseHTTPRequestHandler, HTTPServer

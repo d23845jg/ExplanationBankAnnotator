@@ -34,7 +34,7 @@ function TreeContent({claim}) {
 
   const [configModal, setConfigModal] = useState({ openModal: false, nodePath: []});
   const [treeData, setTreeData] = useState([
-    { title: claim, expanded: true, data: {unique_id: '0', sentence: claim} }
+    { title: claim, expanded: true, data: {unique_id: '0', statement: claim} }
   ]);
   const [sending, setSending] = useState(false);
 
@@ -58,9 +58,9 @@ function TreeContent({claim}) {
         expandParent: true,
         getNodeKey,
         newNode: {
-          title: data.sentence,
+          title: data.statement,
           expanded: true,
-          data
+          data: {unique_id: data.unique_id, statement: data.statement}
         }
       }).treeData
     );

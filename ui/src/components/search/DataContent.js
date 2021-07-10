@@ -36,11 +36,10 @@ const useStyles = makeStyles((theme) => ({
 export const nodeTypeData = 'card';
 const nodeSpec = {
   beginDrag: componentProps => ({ node: { 
-    title: componentProps.data.sentence, 
+    title: componentProps.data.statement, 
     expanded: true, 
-    data: componentProps.data,
-  }}),
-  
+    data: {unique_id: componentProps.data.unique_id, statement: componentProps.data.statement},
+  }})
 };
 const nodeCollect = (connect, monitor) => ({
   connectDragSource: connect.dragSource(),
@@ -48,7 +47,7 @@ const nodeCollect = (connect, monitor) => ({
   // didDrop: !!monitor.didDrop(),
 });
 
-function DataContent({ data, claim, fact_list, connectDragSource}) {
+function DataContent({ data, claim, connectDragSource}) {
 
   const [expanded, setExpanded] = useState(false);
 
@@ -81,13 +80,12 @@ function DataContent({ data, claim, fact_list, connectDragSource}) {
               <ExpandMoreIcon />
             </IconButton>
           }
-          title={createData({title:'', sentence:data.sentence})}
+          title={createData({title:'', sentence:data.statement})}
         />
         <Collapse in={expanded} timeout="auto" unmountOnExit>
           <CardContent>
             {createData({title:'Cosine Similarity', sentence:data.cosine_similarity})}
-            {createData({title:'Title', sentence:data.title})}
-            {createData({title:'Citation', sentence:data.citation})}
+            {createData({title:'Resource', sentence:data.resource})}
           </CardContent>
         </Collapse>
       </Card>
@@ -99,7 +97,6 @@ function DataContent({ data, claim, fact_list, connectDragSource}) {
 DataContent.propTypes = {
   data: PropTypes.object.isRequired,
   claim: PropTypes.string.isRequired,
-  fact_list: PropTypes.array.isRequired,
   connectDragSource: PropTypes.func.isRequired,
 };
 
