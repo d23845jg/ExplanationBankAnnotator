@@ -50,17 +50,17 @@ class RetrieveFact:
             {
                 'cosine_similarity': cos_sim[i],
                 'unique_id': self.breastcancer_facts_df.unique_id[i],
-                'statement': self.breastcancer_facts_df.text[i], # self.breastcancer_facts_df.statement[i],
-                'resource': '', #self.breastcancer_facts_df.resource[i],
+                'statement': self.breastcancer_facts_df.statement[i],
+                'resource': self.breastcancer_facts_df.resource[i],
                 #'LoE/GoR':self.breastcancer_facts_df.LoE/GoR[i],
-                'consensus': '', #validate(self.breastcancer_facts_df.consensus[i]),
-                'type': self.breastcancer_facts_df.type[i], #validate(self.breastcancer_facts_df.type[i]),
-                'section': '' #validate(self.breastcancer_facts_df.section[i])
+                'consensus': validate(self.breastcancer_facts_df.consensus[i]),
+                'type': validate(self.breastcancer_facts_df.type[i]),
+                'section': validate(self.breastcancer_facts_df.section[i])
             }
             for i in heapq.nlargest(20,range(len(self.breastcancer_facts_df)),key=lambda i:cos_sim[i])
         ]
 
-retrieve_fact=RetrieveFact(fp='../output/breast_cancer_facts_sample.csv',sen_emb_fp='../output/all_fact_sentence_embeddings_sample.npy')
+retrieve_fact=RetrieveFact(fp='output/FactBank-0.2-BreastCancerFactBank.csv',sen_emb_fp='output/sentence_embeddings-0.2-BreastCancerFactBank.npy')
 
 # HTTP SERVER ------------------------------------------------------------------------------------------------------------------------------------------
 from http.server import BaseHTTPRequestHandler, HTTPServer
