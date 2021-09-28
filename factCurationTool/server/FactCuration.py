@@ -8,7 +8,6 @@ import sqlite3
 class CurationFact:
     
     def __init__(self,fp):
-        
         self.db=fp
         
     def retrieve(self,fact_type):
@@ -20,12 +19,12 @@ class CurationFact:
         facts=None
         conn=None
         try:
-        
             conn=sqlite3.connect(self.db)
             curs=conn.cursor()
             
             curs.execute("SELECT unique_id, json_content FROM facts WHERE type=?",(fact_type,))
-            facts=dict([(unique_id,json.loads(json_content)) for unique_id,json_content in curs.fetchall()])
+            #facts=dict([(unique_id,json.loads(json_content)) for unique_id,json_content in curs.fetchall()])
+            facts=[json.loads(json_content) for unique_id,json_content in curs.fetchall()]
         finally:
             if conn is not None:
                 conn.close()
@@ -41,7 +40,6 @@ class CurationFact:
         
         conn=None
         try:
-        
             conn=sqlite3.connect(self.db)
             curs=conn.cursor()
             
@@ -67,20 +65,10 @@ import cgi
 import json
 
 class MyHandler(BaseHTTPRequestHandler):
-
-    def _set_html_response(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-
-    def _set_json_response(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
     
     def _send_headers(self):
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', 'http://localhost:8080')
+        self.send_header('Access-Control-Allow-Origin', 'http://localhost:3000')
         self.send_header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header('Content-Type', 'application/json')
@@ -88,7 +76,7 @@ class MyHandler(BaseHTTPRequestHandler):
     
     def _send_error(self):
         self.send_response(400)
-        self.send_header('Access-Control-Allow-Origin', 'http://localhost:8080')
+        self.send_header('Access-Control-Allow-Origin', 'http://localhost:3000')
         self.send_header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header('Content-Type', 'application/json')
@@ -98,15 +86,8 @@ class MyHandler(BaseHTTPRequestHandler):
         logging.info('GET request,\nPath: %s\nHeaders:\n%s\n', str(self.path), str(self.headers))
         url = urlparse(self.path)
         fields = parse_qs(url.query)
-        if url.path== '/ui':
-            self._set_html_response()
-            with open('./FactCuration.html','r') as f:
-                line=f.readline()
-                while line:
-                    self.wfile.write(line.encode('utf-8'))
-                    line=f.readline()
-        elif url.path == '/curation' and 'type' in fields and fields['type'][0] in ["guidelines","statements"]:
-            self._set_json_response()
+        if url.path == '/curation' and 'type' in fields and fields['type'][0] in ["guidelines","statements"]:
+            self._send_headers()
             self.wfile.write(json.dumps(curation_fact.retrieve(fields['type'][0])).encode('utf-8'))
         else:
             self._send_error()
@@ -125,7 +106,7 @@ class MyHandler(BaseHTTPRequestHandler):
             and 'factData' in post_data and (('unique_id' not in post_data['factData']) or (pattern.match(post_data['factData']['unique_id']) is not None)):
             curation_fact.save(fields['type'][0],post_data['factData'])
 
-            self._set_html_response()
+            self._send_headers()
             self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
         else:
             self._send_error()
