@@ -69,7 +69,7 @@ function FlexibleTable({useGetAll, updateRow, disabledAttributes, actions}) {
 
   const handleOpenEdit = (row) => setOpenEdit({open: true, data: row});
   const handleCloseEdit = () => setOpenEdit({open: false, data: {}});
-  
+
   return (
     <div>
       <EditModal disabledAttributes={disabledAttributes} openModal={openEdit} setOpenModal={setOpenEdit} handleSubmitModal={updateRow} handleCloseModal={handleCloseEdit}/>
@@ -77,7 +77,7 @@ function FlexibleTable({useGetAll, updateRow, disabledAttributes, actions}) {
       <Table>
         <TableHead>
           <TableRow>
-            {Object.keys(data[0]).map((column) => (<TableCell key={column}>{column}</TableCell>))}
+            {(typeof data[0] !== 'undefined') ? Object.keys(data[0]).map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>}
             {(typeof actions !== 'undefined' && actions.length !== 0) ? <TableCell key={'Action'}>{'Action'}</TableCell> : undefined /* Adding action column if needed */}
           </TableRow>
         </TableHead>
@@ -104,11 +104,11 @@ function FlexibleTable({useGetAll, updateRow, disabledAttributes, actions}) {
                       );
                     }
                     else {
-                      return null;
+                      return undefined;
                     }
                   }))}
                 </TableCell>
-                : null /* Adding action buttons to the action row if needed */
+                : undefined /* Adding action buttons to the action row if needed */
               }
             </TableRow>
           ))}

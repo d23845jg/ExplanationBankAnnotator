@@ -6,6 +6,7 @@ import Box from '@material-ui/core/Box';
 
 import FlexibleTable from './FlexibleTable';
 import { 
+  useGetAllDefinitions,
   useGetAllGuidelines, 
   useGetAllStatements,
   postAGuidelines,
@@ -49,10 +50,10 @@ function MainContent() {
         Item One, Crete new fact
       </TabPanel>
       <TabPanel value={value} index={1}>
-        Item Two, ver todos los definitions
+        <FlexibleTable useGetAll={useGetAllDefinitions} disabledAttributes={['unique_id']}/>
       </TabPanel>
       <TabPanel value={value} index={2}>
-      <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} actions={['edit', 'delete']}/>
+        <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} actions={['edit', 'delete']}/>
       </TabPanel>
       <TabPanel value={value} index={3}>
         <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} actions={['edit', 'delete']}/>

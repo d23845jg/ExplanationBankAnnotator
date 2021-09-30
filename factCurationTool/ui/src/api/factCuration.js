@@ -6,7 +6,12 @@ export const getFact = ({ unique_id }) =>
     .get(`http://localhost:8080/curation?id=${unique_id}`)
     .then(response => response.data);
 
-export const getAllGuidelines = () => 
+export const getAllDefinitions = () => 
+  axios
+    .get('http://localhost:8080/curation?type=definitions')
+    .then(response => response.data);
+
+    export const getAllGuidelines = () => 
   axios
     .get('http://localhost:8080/curation?type=guidelines')
     .then(response => response.data);
