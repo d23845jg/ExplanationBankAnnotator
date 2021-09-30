@@ -12,6 +12,7 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import { makeStyles } from '@material-ui/core/styles';
 
+import AddIcon from '@material-ui/icons/Add';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 
@@ -70,51 +71,61 @@ function FlexibleTable({useGetAll, updateRow, disabledAttributes, actions}) {
   const handleOpenEdit = (row) => setOpenEdit({open: true, data: row});
   const handleCloseEdit = () => setOpenEdit({open: false, data: {}});
 
+  // TODO: this approach for the add item has to be changed
+  const bb = Object.keys(data[0]).reduce((a, v) => ({ ...a, [v]: ''}), {}) 
+  delete bb['unique_id'];
+
   return (
     <div>
       <EditModal disabledAttributes={disabledAttributes} openModal={openEdit} setOpenModal={setOpenEdit} handleSubmitModal={updateRow} handleCloseModal={handleCloseEdit}/>
+      
+      <IconButton onClick={() => handleOpenEdit(bb)}>
+        <AddIcon />
+      </IconButton>
+      
       <TableContainer className={classes.page} component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            {(typeof data[0] !== 'undefined') ? Object.keys(data[0]).map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>}
-            {(typeof actions !== 'undefined' && actions.length !== 0) ? <TableCell key={'Action'}>{'Action'}</TableCell> : undefined /* Adding action column if needed */}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.map((row) => (
-            <TableRow key={row.unique_id}>
-              {Object.values(row).map((value) => (<TableCell key={row.unique_id+value}>{value}</TableCell>))}
-              {(typeof actions !== 'undefined' && actions.length !== 0) ? 
-
-                <TableCell key={'Action'}>
-                  {(actions.map((action) => {
-                    if (action === 'edit') {
-                      return (
-                        <IconButton key={action} color="default" onClick={() => handleOpenEdit(row)}>
-                          <EditIcon />
-                        </IconButton>
-                      );
-                    }
-                    else if (action === 'delete') {
-                      return (
-                        <IconButton key={action} color="default" onClick={() => null}>
-                          <DeleteIcon />
-                        </IconButton>
-                      );
-                    }
-                    else {
-                      return undefined;
-                    }
-                  }))}
-                </TableCell>
-                : undefined /* Adding action buttons to the action row if needed */
-              }
+        <Table>
+          <TableHead>
+            <TableRow>
+              {/*(tableAttributes.length !== 0) ? tableAttributes.map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>*/}
+              {(typeof data[0] !== 'undefined') ? Object.keys(data[0]).map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>}
+              {(typeof actions !== 'undefined' && actions.length !== 0) ? <TableCell key={'Action'}>{'Action'}</TableCell> : undefined /* Adding action column if needed */}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {data.map((row) => (
+              <TableRow key={row.unique_id}>
+                {Object.values(row).map((value) => (<TableCell key={row.unique_id+value}>{value}</TableCell>))}
+                {(typeof actions !== 'undefined' && actions.length !== 0) ? 
+
+                  <TableCell key={'Action'}>
+                    {(actions.map((action) => {
+                      if (action === 'edit') {
+                        return (
+                          <IconButton key={action} color="default" onClick={() => handleOpenEdit(row)}>
+                            <EditIcon />
+                          </IconButton>
+                        );
+                      }
+                      else if (action === 'delete') {
+                        return (
+                          <IconButton key={action} color="default" onClick={() => null}>
+                            <DeleteIcon />
+                          </IconButton>
+                        );
+                      }
+                      else {
+                        return undefined;
+                      }
+                    }))}
+                  </TableCell>
+                  : undefined /* Adding action buttons to the action row if needed */
+                }
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </div>
   );
 };

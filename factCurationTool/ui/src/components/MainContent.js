@@ -40,22 +40,18 @@ function MainContent() {
     <div>
 
       <Tabs value={value} onChange={(_, value) => setValue(value)}>
-        <Tab label="Create new fact"/>
         <Tab label="View all definitions"/>
         <Tab label="View all statements"/>
         <Tab label="View all guidelines"/>
       </Tabs>
 
-      <TabPanel value={value} index={0}>
-        Item One, Crete new fact
-      </TabPanel>
-      <TabPanel value={value} index={1}>
+      <TabPanel value={value} index={9 /*TODO: change index*/}>
         <FlexibleTable useGetAll={useGetAllDefinitions} disabledAttributes={['unique_id']}/>
       </TabPanel>
-      <TabPanel value={value} index={2}>
+      <TabPanel value={value} index={1}>
         <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} actions={['edit', 'delete']}/>
       </TabPanel>
-      <TabPanel value={value} index={3}>
+      <TabPanel value={value} index={2}>
         <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} actions={['edit', 'delete']}/>
       </TabPanel>
 

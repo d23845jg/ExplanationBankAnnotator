@@ -12,7 +12,7 @@ function FactContent() {
   const useGetFactById = () => useGetFact(unique_id);
 
   return (
-    <FlexibleTable useGetAll={useGetFactById} />
+    <FlexibleTable useGetAll={useGetFactById}/>
   );
 };
 
