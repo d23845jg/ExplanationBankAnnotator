@@ -5,7 +5,12 @@ import Tab from '@material-ui/core/Tab';
 import Box from '@material-ui/core/Box';
 
 import FlexibleTable from './FlexibleTable';
-import { useGetAllGuidelines, useGetAllStatements } from '../hooks/factCuration';
+import { 
+  useGetAllGuidelines, 
+  useGetAllStatements,
+  postAGuidelines,
+  postAStatement,
+} from '../hooks/factCuration';
 
 function MainContent() {
 
@@ -47,10 +52,10 @@ function MainContent() {
         Item Two, ver todos los definitions
       </TabPanel>
       <TabPanel value={value} index={2}>
-      <FlexibleTable useGetAll={useGetAllStatements}/>
+      <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} actions={['edit', 'delete']}/>
       </TabPanel>
       <TabPanel value={value} index={3}>
-        <FlexibleTable useGetAll={useGetAllGuidelines}/>
+        <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} actions={['edit', 'delete']}/>
       </TabPanel>
 
     </div>

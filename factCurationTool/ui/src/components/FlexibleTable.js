@@ -1,7 +1,8 @@
-import React from 'react';
+import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 
 import CircularProgress from '@material-ui/core/CircularProgress';
+import IconButton from '@material-ui/core/IconButton';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -11,8 +12,14 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import { makeStyles } from '@material-ui/core/styles';
 
+import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+
 import Alert from '@material-ui/lab/Alert';
 import AlertTitle from '@material-ui/lab/AlertTitle';
+
+import EditModal from './EditModal';
+
 
 const useStyles = makeStyles((theme) => ({
   loading: {
@@ -33,9 +40,11 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function FlexibleTable({useGetAll}) {
+function FlexibleTable({useGetAll, updateRow, disabledAttributes, actions}) {
 
   const classes = useStyles();
+
+  const [openEdit, setOpenEdit] = useState({open: false, data: {}});
 
   const {
     data,
@@ -57,29 +66,64 @@ function FlexibleTable({useGetAll}) {
       </Alert>
     );
   }
+
+  const handleOpenEdit = (row) => setOpenEdit({open: true, data: row});
+  const handleCloseEdit = () => setOpenEdit({open: false, data: {}});
   
   return (
-    <TableContainer className={classes.page} component={Paper}>
+    <div>
+      <EditModal disabledAttributes={disabledAttributes} openModal={openEdit} setOpenModal={setOpenEdit} handleSubmitModal={updateRow} handleCloseModal={handleCloseEdit}/>
+      <TableContainer className={classes.page} component={Paper}>
       <Table>
         <TableHead>
           <TableRow>
             {Object.keys(data[0]).map((column) => (<TableCell key={column}>{column}</TableCell>))}
+            {(typeof actions !== 'undefined' && actions.length !== 0) ? <TableCell key={'Action'}>{'Action'}</TableCell> : undefined /* Adding action column if needed */}
           </TableRow>
         </TableHead>
         <TableBody>
           {data.map((row) => (
             <TableRow key={row.unique_id}>
               {Object.values(row).map((value) => (<TableCell key={row.unique_id+value}>{value}</TableCell>))}
+              {(typeof actions !== 'undefined' && actions.length !== 0) ? 
+
+                <TableCell key={'Action'}>
+                  {(actions.map((action) => {
+                    if (action === 'edit') {
+                      return (
+                        <IconButton key={action} color="default" onClick={() => handleOpenEdit(row)}>
+                          <EditIcon />
+                        </IconButton>
+                      );
+                    }
+                    else if (action === 'delete') {
+                      return (
+                        <IconButton key={action} color="default" onClick={() => null}>
+                          <DeleteIcon />
+                        </IconButton>
+                      );
+                    }
+                    else {
+                      return null;
+                    }
+                  }))}
+                </TableCell>
+                : null /* Adding action buttons to the action row if needed */
+              }
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </TableContainer>
+    </div>
   );
 };
 
 FlexibleTable.propTypes = {
   useGetAll: PropTypes.func.isRequired,
+  updateRow: PropTypes.func,
+  actions: PropTypes.array,
+  disabledAttributes: PropTypes.array,
 };
 
 export default FlexibleTable;

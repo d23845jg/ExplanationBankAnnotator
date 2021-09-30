@@ -10,7 +10,7 @@ class CurationFact:
     def __init__(self,fp):
         self.db=fp
         
-    def retrieve(self,fact_type):
+    def retrieveByType(self,fact_type):
         if fact_type=="guidelines":
             fact_type="guideline"
         elif fact_type=="statements":
@@ -23,6 +23,22 @@ class CurationFact:
             curs=conn.cursor()
             
             curs.execute("SELECT unique_id, json_content FROM facts WHERE type=?",(fact_type,))
+            #facts=dict([(unique_id,json.loads(json_content)) for unique_id,json_content in curs.fetchall()])
+            facts=[json.loads(json_content) for unique_id,json_content in curs.fetchall()]
+        finally:
+            if conn is not None:
+                conn.close()
+            
+        return facts
+
+    def retrieveByID(self,id):
+        facts=None
+        conn=None
+        try:
+            conn=sqlite3.connect(self.db)
+            curs=conn.cursor()
+            
+            curs.execute("SELECT unique_id, json_content FROM facts WHERE unique_id=?",(id,))
             #facts=dict([(unique_id,json.loads(json_content)) for unique_id,json_content in curs.fetchall()])
             facts=[json.loads(json_content) for unique_id,json_content in curs.fetchall()]
         finally:
@@ -88,7 +104,10 @@ class MyHandler(BaseHTTPRequestHandler):
         fields = parse_qs(url.query)
         if url.path == '/curation' and 'type' in fields and fields['type'][0] in ["guidelines","statements"]:
             self._send_headers()
-            self.wfile.write(json.dumps(curation_fact.retrieve(fields['type'][0])).encode('utf-8'))
+            self.wfile.write(json.dumps(curation_fact.retrieveByType(fields['type'][0])).encode('utf-8'))
+        elif url.path == '/curation' and 'id' in fields:
+            self._send_headers()
+            self.wfile.write(json.dumps(curation_fact.retrieveByID(fields['id'][0])).encode('utf-8'))
         else:
             self._send_error()
             self.wfile.write('Invalid URL'.encode('utf-8'))
@@ -101,6 +120,8 @@ class MyHandler(BaseHTTPRequestHandler):
         url = urlparse(self.path)
         fields = parse_qs(url.query)
         # verify uuid4
+        print("AAAA")
+        print(post_data)
         pattern = re.compile('^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$')
         if url.path == '/save' and 'type' in fields and fields['type'][0] in ["guidelines","statements"]\
             and 'factData' in post_data and (('unique_id' not in post_data['factData']) or (pattern.match(post_data['factData']['unique_id']) is not None)):

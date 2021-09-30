@@ -77,7 +77,7 @@ function Header() {
   function keyPress(event){
     // keyCode 13 is Enter key
     if(event.keyCode === 13){
-       history.push(`/search?query=${event.target.value}`) // TODO: chage this
+       history.push(`/search?id=${event.target.value}`) // TODO: chage this
     }
  }
 
