@@ -6,7 +6,7 @@ import IconButton from '@material-ui/core/IconButton';
 import InputBase from '@material-ui/core/InputBase';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { alpha, makeStyles } from '@material-ui/core/styles';
 
 import SearchIcon from '@material-ui/icons/Search';
 
@@ -24,9 +24,9 @@ const useStyles = makeStyles((theme) => ({
   search: {
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.black, 0.15),
+    backgroundColor: alpha(theme.palette.common.black, 0.15),
     '&:hover': {
-      backgroundColor: fade(theme.palette.common.black, 0.25),
+      backgroundColor: alpha(theme.palette.common.black, 0.25),
     },
     marginLeft: 0,
     width: '100%',

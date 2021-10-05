@@ -9,15 +9,15 @@ import CardHeader from '@material-ui/core/CardHeader';
 import Collapse from '@material-ui/core/Collapse';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { alpha, makeStyles } from '@material-ui/core/styles';
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    backgroundColor: fade('#3f51b5', 0.2),
+    backgroundColor: alpha('#3f51b5', 0.2),
     '&:hover': {
-      backgroundColor: fade('#3f51b5', 0.4),
+      backgroundColor: alpha('#3f51b5', 0.4),
     },
   },
   expand: {
