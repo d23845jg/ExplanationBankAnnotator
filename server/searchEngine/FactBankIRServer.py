@@ -35,13 +35,30 @@ class RetrieveFact:
         
         print('sentence embedding get,',self.sentence_embeddings.shape)
 
-    def retrieve(self,query):
+    def retrieve(self,query,fact_type=None):
+        filtered_facts_df=None
+        if fact_type is None or fact_type=="all":
+            filtered_facts_df=self.breastcancer_facts_df.copy()
+            filtered_sentence_embeddings=self.sentence_embeddings
+        elif fact_type=="definition":
+            filter_indicate=self.breastcancer_facts_df["type"].apply(lambda x:x.endswith("_definition"))
+            filtered_facts_df=self.breastcancer_facts_df[filter_indicate]
+            filtered_sentence_embeddings=self.sentence_embeddings[
+                [i for i in range(len(self.sentence_embeddings)) if filter_indicate[i]]
+            ]
+        else:
+            filter_indicate=self.breastcancer_facts_df["type"].apply(lambda x:x==fact_type)
+            filtered_facts_df=self.breastcancer_facts_df[filter_indicate]
+            filtered_sentence_embeddings=self.sentence_embeddings[
+                [i for i in range(len(self.sentence_embeddings)) if filter_indicate[i]]
+            ]
+        
         encoded_input = self.tokenizer([query], padding=True, truncation=True, max_length=512, return_tensors='pt')
         with torch.no_grad():
             model_output = self.bert(**encoded_input)
         query_embedding=mean_pooling(model_output, encoded_input['attention_mask']).detach().numpy()
         
-        cos_sim=cosine_similarity(query_embedding,self.sentence_embeddings)[0].tolist()
+        cos_sim=cosine_similarity(query_embedding,filtered_sentence_embeddings)[0].tolist()
 
         def validate(value):
             return value if not pd.isna(value) else 'NaN'
@@ -49,15 +66,15 @@ class RetrieveFact:
         return [
             {
                 'cosine_similarity': cos_sim[i],
-                'unique_id': self.breastcancer_facts_df.unique_id[i],
-                'statement': self.breastcancer_facts_df.text[i], # self.breastcancer_facts_df.statement[i],
+                'unique_id': filtered_facts_df.unique_id.values[i],
+                'statement': filtered_facts_df.text.values[i], # self.breastcancer_facts_df.statement[i],
                 'resource': '', #self.breastcancer_facts_df.resource[i],
                 #'LoE/GoR':self.breastcancer_facts_df.LoE/GoR[i],
                 'consensus': '', #validate(self.breastcancer_facts_df.consensus[i]),
-                'type': self.breastcancer_facts_df.type[i], #validate(self.breastcancer_facts_df.type[i]),
+                'type': filtered_facts_df.type.values[i], #validate(self.breastcancer_facts_df.type[i]),
                 'section': '' #validate(self.breastcancer_facts_df.section[i])
             }
-            for i in heapq.nlargest(20,range(len(self.breastcancer_facts_df)),key=lambda i:cos_sim[i])
+            for i in heapq.nlargest(20,range(len(filtered_facts_df)),key=lambda i:cos_sim[i])
         ]
 
 retrieve_fact=RetrieveFact(fp='./output/breast_cancer_facts_sample.csv',sen_emb_fp='./output/all_fact_sentence_embeddings_sample.npy')
@@ -91,9 +108,9 @@ class MyHandler(BaseHTTPRequestHandler):
         logging.info('GET request,\nPath: %s\nHeaders:\n%s\n', str(self.path), str(self.headers))
         url = urlparse(self.path)
         fields = parse_qs(url.query)
-        if url.path == '/search' and 'query' in fields:
+        if url.path == '/search' and 'query' in fields and 'type' in fields and fields['type'][0] in ["all","definition","guideline","statement"]:
             self._send_headers()
-            self.wfile.write(json.dumps(retrieve_fact.retrieve(fields['query'][0])).encode('utf-8'))
+            self.wfile.write(json.dumps(retrieve_fact.retrieve(fields['query'][0],fields['type'][0])).encode('utf-8'))
         else:
             self._send_error()
             self.wfile.write('Invalid URL'.encode('utf-8'))

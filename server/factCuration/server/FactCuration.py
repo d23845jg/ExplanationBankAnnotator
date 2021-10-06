@@ -12,7 +12,7 @@ class CurationFact:
         
     def retrieveByType(self,fact_type):
         if fact_type=='definitions':
-            fact_type='definitions'
+            fact_type='definition'
         elif fact_type=='guidelines':
             fact_type='guideline'
         elif fact_type=='statements':
@@ -24,9 +24,16 @@ class CurationFact:
             conn=sqlite3.connect(self.db)
             curs=conn.cursor()
             
-            curs.execute('SELECT unique_id, json_content FROM facts WHERE type=?',(fact_type,))
-            #facts=dict([(unique_id,json.loads(json_content)) for unique_id,json_content in curs.fetchall()])
-            facts=[json.loads(json_content) for unique_id,json_content in curs.fetchall()]
+            if fact_type=="definition":
+                #def_types=('cancer_term_definition',"drug_dictionary_definition","genetics_term_definition")
+                #curs.execute(
+                #    'SELECT unique_id, json_content FROM facts WHERE type in ({})'.format(','.join(['?']*len(def_types))),
+                #    def_types
+                #)
+                facts=[]
+            else:
+                curs.execute('SELECT unique_id, json_content FROM facts WHERE type=?',(fact_type,))
+                facts=[json.loads(json_content) for unique_id,json_content in curs.fetchall()]
         finally:
             if conn is not None:
                 conn.close()
