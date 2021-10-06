@@ -80,7 +80,7 @@ function EditModal({disabledAttributes, openModal, setOpenModal, handleSubmitMod
   );
 
   return (
-    <Modal open={openModal.open} onClose={handleCloseModal} aria-labelledby="add-child-to-tree-modal">
+    <Modal open={openModal.open} onClose={handleCloseModal}>
       {body}
     </Modal>
   );

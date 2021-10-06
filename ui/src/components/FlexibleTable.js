@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import Box from '@material-ui/core/Box';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import IconButton from '@material-ui/core/IconButton';
+import MenuItem from '@material-ui/core/MenuItem';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -12,21 +13,20 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TablePagination from '@material-ui/core/TablePagination';
 import Paper from '@material-ui/core/Paper';
+import Select from '@material-ui/core/Select';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 
 import AddIcon from '@material-ui/icons/Add';
-import EditIcon from '@material-ui/icons/Edit';
-import DeleteIcon from '@material-ui/icons/Delete';
 import FirstPageIcon from '@material-ui/icons/FirstPage';
 import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
 
-
 import Alert from '@material-ui/lab/Alert';
 import AlertTitle from '@material-ui/lab/AlertTitle';
 
 import EditModal from './EditModal';
+import DragTableRow from './DragTableRow';
 
 function TablePaginationActions({ count, page, rowsPerPage, onPageChange }) {
   const theme = useTheme();
@@ -108,13 +108,14 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function FlexibleTable({useGetAll, updateRow, disabledAttributes, actions}) {
+function FlexibleTable({useGetAll, updateRow, addButton, filterBurron, draggable, disabledAttributes, actionsCol}) {
 
   const classes = useStyles();
 
   const [openEdit, setOpenEdit] = useState({open: false, data: {}});
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [filter, setFilter] = useState('all');
 
   const {
     data,
@@ -137,23 +138,17 @@ function FlexibleTable({useGetAll, updateRow, disabledAttributes, actions}) {
     );
   }
 
+  const filterData = data.filter((data) => data.type === filter || filter === 'all');
+  const filterFirstElement = (typeof filterData[0] !== 'undefined') ? filterData[0] : [];
+
   const handleOpenEdit = (row) => setOpenEdit({open: true, data: row});
   const handleCloseEdit = () => setOpenEdit({open: false, data: {}});
 
   // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - data.length) : 0;
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filterData.length) : 0;
 
   // TODO: this approach for the add item has to be changed
-  const bb = Object.keys(data[0]).reduce((a, v) => ({ ...a, [v]: ''}), {}) 
+  const bb = Object.keys(filterFirstElement).reduce((a, v) => ({ ...a, [v]: ''}), {}) 
   delete bb['unique_id'];
 
   return (
@@ -165,68 +160,53 @@ function FlexibleTable({useGetAll, updateRow, disabledAttributes, actions}) {
           <TableHead>
             <TableRow>
               <TableCell>
-                <IconButton onClick={() => handleOpenEdit(bb)}>
-                  <AddIcon />
-                </IconButton>
+                {(addButton) ?
+                  <IconButton onClick={() => handleOpenEdit(bb)}>
+                    <AddIcon />
+                  </IconButton>
+                  : undefined
+                }
+
+                {(filterBurron) ?
+                  <Select
+                    value={filter}
+                    onChange={(event) => setFilter(event.target.value)}
+                  >
+                    <MenuItem value={'all'}>all</MenuItem>
+                    <MenuItem value={'statement'}>statement</MenuItem>
+                    <MenuItem value={'guideline'}>guideline</MenuItem>
+                    <MenuItem value={'cancer_term_definition'}>cancer_term_definition</MenuItem>
+                    <MenuItem value={'drug_dictionary_definition'}>drug_dictionary_definition</MenuItem>
+                    <MenuItem value={'genetics_term_definition'}>genetics_term_definition</MenuItem>
+                  </Select>
+                  : undefined
+                }
               </TableCell>
 
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                colSpan={Object.keys(data[0]).length}
-                count={data.length}
+                colSpan={Object.keys(filterFirstElement).length}
+                count={filterData.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
-                SelectProps={{
-                  inputProps: {
-                    'aria-label': 'rows per page',
-                  },
-                  native: true,
-                }}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
+                onPageChange={(event, newPage) => setPage(newPage)}
+                onRowsPerPageChange={(event) => {setRowsPerPage(parseInt(event.target.value, 10)); setPage(0);}}
                 ActionsComponent={TablePaginationActions}
               />
             </TableRow>
-            
+
             <TableRow>
               {/*(tableAttributes.length !== 0) ? tableAttributes.map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>*/}
-              {(typeof data[0] !== 'undefined') ? Object.keys(data[0]).map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>}
-              {(typeof actions !== 'undefined' && actions.length !== 0) ? <TableCell key={'Action'}>{'Action'}</TableCell> : undefined /* Adding action column if needed */}
+              {(typeof filterFirstElement !== 'undefined') ? Object.keys(filterFirstElement).map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>}
+              {(actionsCol.length !== 0) ? <TableCell key={'Action'}>{'Action'}</TableCell> : undefined /* Adding action column if needed */}
             </TableRow>
           </TableHead>
           <TableBody>
             {(rowsPerPage > 0
-              ? data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              : data
+              ? filterData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              : filterData
             ).map((row) => (
-              <TableRow key={row.unique_id}>
-                {Object.values(row).map((value) => (<TableCell key={row.unique_id+value}>{value}</TableCell>))}
-                {(typeof actions !== 'undefined' && actions.length !== 0) ? 
-
-                  <TableCell key={'Action'}>
-                    {(actions.map((action) => {
-                      if (action === 'edit') {
-                        return (
-                          <IconButton key={action} color="default" onClick={() => handleOpenEdit(row)}>
-                            <EditIcon />
-                          </IconButton>
-                        );
-                      }
-                      else if (action === 'delete') {
-                        return (
-                          <IconButton key={action} color="default" onClick={() => null}>
-                            <DeleteIcon />
-                          </IconButton>
-                        );
-                      }
-                      else {
-                        return undefined;
-                      }
-                    }))}
-                  </TableCell>
-                  : undefined /* Adding action buttons to the action row if needed */
-                }
-              </TableRow>
+              <DragTableRow key={row.unique_id} draggable={draggable} data={row} actionsCol={actionsCol} actionsFunc={[() => handleOpenEdit(row), (() => undefined)]}/>
             ))}
 
             {emptyRows > 0 && (
@@ -241,10 +221,22 @@ function FlexibleTable({useGetAll, updateRow, disabledAttributes, actions}) {
   );
 };
 
+FlexibleTable.defaultProps = {
+  updateRow: () => undefined,
+  addButton: false,
+  filterButton: false,
+  draggable: false,
+  actionsCol: [],
+  disabledAttributes: []
+}
+
 FlexibleTable.propTypes = {
   useGetAll: PropTypes.func.isRequired,
   updateRow: PropTypes.func,
-  actions: PropTypes.array,
+  addButton: PropTypes.bool,
+  draggable: PropTypes.bool,
+  filterButton: PropTypes.bool,
+  actionsCol: PropTypes.array,
   disabledAttributes: PropTypes.array,
 };
 

@@ -10,7 +10,7 @@ import AddCircleIcon from '@material-ui/icons/AddCircle';
 import DeleteIcon from '@material-ui/icons/Delete';
 import SaveIcon from '@material-ui/icons/Save';
 
-import { nodeTypeData } from '../DataContent';
+import { nodeTypeData } from '../../DragTableRow';
 import AddChildTreeModal from './AddChildTreeModal';
 import { saveTreeData } from '../../../hooks/tree';
 

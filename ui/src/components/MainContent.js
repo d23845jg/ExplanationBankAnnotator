@@ -10,7 +10,7 @@ import { alpha, makeStyles } from '@material-ui/core/styles';
 
 import SearchIcon from '@material-ui/icons/Search';
 
-import FlexibleTable from './factCuration/FlexibleTable';
+import FlexibleTable from './FlexibleTable';
 import { 
   useGetAllDefinitions,
   useGetAllGuidelines, 
@@ -159,10 +159,10 @@ function MainContent() {
         <FlexibleTable useGetAll={useGetAllDefinitions} disabledAttributes={['unique_id']}/>
       </TabPanel>
       <TabPanel value={value} index={3}>
-        <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} actions={['edit', 'delete']}/>
+        <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit', 'delete']}/>
       </TabPanel>
       <TabPanel value={value} index={4}>
-        <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} actions={['edit', 'delete']}/>
+        <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit', 'delete']}/>
       </TabPanel>
 
     </div>
