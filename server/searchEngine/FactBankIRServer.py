@@ -108,9 +108,13 @@ class MyHandler(BaseHTTPRequestHandler):
         logging.info('GET request,\nPath: %s\nHeaders:\n%s\n', str(self.path), str(self.headers))
         url = urlparse(self.path)
         fields = parse_qs(url.query)
-        if url.path == '/search' and 'query' in fields and 'type' in fields and fields['type'][0] in ["all","definition","guideline","statement"]:
-            self._send_headers()
-            self.wfile.write(json.dumps(retrieve_fact.retrieve(fields['query'][0],fields['type'][0])).encode('utf-8'))
+        if url.path == '/search' and 'query' in fields:
+            if 'type' in fields and fields['type'][0] in ["all","definition","guideline","statement"]:
+                self._send_headers()
+                self.wfile.write(json.dumps(retrieve_fact.retrieve(fields['query'][0],fields['type'][0])).encode('utf-8'))
+            else:
+                self._send_headers()
+                self.wfile.write(json.dumps(retrieve_fact.retrieve(fields['query'][0],"all")).encode('utf-8'))
         else:
             self._send_error()
             self.wfile.write('Invalid URL'.encode('utf-8'))
