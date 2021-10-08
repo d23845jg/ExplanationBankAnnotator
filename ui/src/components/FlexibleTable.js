@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import PropTypes from 'prop-types';
+import pick from 'lodash/pick';
 
 import Box from '@material-ui/core/Box';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -108,7 +109,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function FlexibleTable({useGetAll, updateRow, addButton, filterBurron, draggable, disabledAttributes, actionsCol}) {
+function FlexibleTable({useGetAll, updateRow, addButton, filterBurron, draggable, displayCol, actionsCol, disabledAttributes}) {
 
   const classes = useStyles();
 
@@ -138,7 +139,8 @@ function FlexibleTable({useGetAll, updateRow, addButton, filterBurron, draggable
     );
   }
 
-  const filterData = data.filter((data) => data.type === filter || filter === 'all');
+  let filterData = data.map((data) => (displayCol.length === 0) ? data : pick(data, displayCol));
+  filterData = filterData.filter((data) => data.type === filter || filter === 'all');
   const filterFirstElement = (typeof filterData[0] !== 'undefined') ? filterData[0] : [];
 
   const handleOpenEdit = (row) => setOpenEdit({open: true, data: row});
@@ -226,6 +228,7 @@ FlexibleTable.defaultProps = {
   addButton: false,
   filterButton: false,
   draggable: false,
+  displayCol: [],
   actionsCol: [],
   disabledAttributes: []
 }
@@ -234,8 +237,9 @@ FlexibleTable.propTypes = {
   useGetAll: PropTypes.func.isRequired,
   updateRow: PropTypes.func,
   addButton: PropTypes.bool,
-  draggable: PropTypes.bool,
   filterButton: PropTypes.bool,
+  draggable: PropTypes.bool,
+  displayCol: PropTypes.array,
   actionsCol: PropTypes.array,
   disabledAttributes: PropTypes.array,
 };
