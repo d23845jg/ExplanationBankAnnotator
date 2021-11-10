@@ -8,18 +8,6 @@ import TreeContent from './tree/TreeContent';
 import FlexibleTable from '../FlexibleTable';
 
 const useStyles = makeStyles((theme) => ({
-  loading: {
-    width: '10%',
-    marginTop: theme.spacing(5),
-    marginLeft: 'auto',
-    marginRight: 'auto',
-  },
-  alert: {
-    width: '80%',
-    marginTop: theme.spacing(5),
-    marginLeft: 'auto',
-    marginRight: 'auto',
-  },
   page: {
     width: '100%',
     paddingTop: theme.spacing(2),
@@ -27,10 +15,8 @@ const useStyles = makeStyles((theme) => ({
   grid: {
     justify: 'space-evenly',
     alignItems: 'center',
-    float: 'left', 
+    float: 'left',
     width: "50%",
-    height: '100vh', // Check if scroll is needed or pagination
-    overflow: 'auto',
   },
   sortableTree: {
     float: 'right',
@@ -46,17 +32,17 @@ function SearchContent() {
   const query = search.match(/query=(.*)/)[1];
 
   const useGetCancerFacts = () => useCancerQuery(query);
-  
+
   return (
     <div className={classes.page}>
       <div className={classes.grid}>
-        <FlexibleTable useGetAll={useGetCancerFacts} filterBurron={true} draggable={true} displayCol={['Statement', 'Resource', 'Type']} disabledAttributes={[]}/>
+        <FlexibleTable useGetAll={useGetCancerFacts} filterBurron={true} draggable={true} displayCol={['Statement', 'Resource', 'Type']} disabledAttributes={[]} />
       </div>
       <div className={classes.sortableTree}>
-        <TreeContent claim={query}/>
+        <TreeContent claim={query} />
       </div>
     </div>
-    
+
   );
 };
 

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import Box from '@material-ui/core/Box';
@@ -6,14 +6,15 @@ import IconButton from '@material-ui/core/IconButton';
 import InputBase from '@material-ui/core/InputBase';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
+import Paper from '@material-ui/core/Paper';
 import { alpha, makeStyles } from '@material-ui/core/styles';
 
 import SearchIcon from '@material-ui/icons/Search';
 
 import FlexibleTable from './FlexibleTable';
-import { 
+import {
   useGetAllDefinitions,
-  useGetAllGuidelines, 
+  useGetAllGuidelines,
   useGetAllStatements,
   postAGuidelines,
   postAStatement,
@@ -62,6 +63,9 @@ const useStyles = makeStyles((theme) => ({
       },
     },
   },
+  paper: {
+    maxHeight: '92vh',
+  },
 }));
 
 function TabPanel(props) {
@@ -92,51 +96,51 @@ function MainContent() {
 
   function keyPressSearch(event) {
     // keyCode 13 is Enter key
-    if(event.keyCode === 13){
-       history.push(`/search?query=${event.target.value}`)
+    if (event.keyCode === 13) {
+      history.push(`/search?query=${event.target.value}`)
     }
   }
 
   return (
     <div>
+      <Paper className={classes.paper}>
+        <Tabs value={value} onChange={(_, value) => setValue(value)}>
+          <Tab label="Search" />
+          <Tab label="View all definitions" />
+          <Tab label="View all statements" />
+          <Tab label="View all guidelines" />
+        </Tabs>
 
-      <Tabs value={value} onChange={(_, value) => setValue(value)}>
-        <Tab label="Search"/>
-        <Tab label="View all definitions"/>
-        <Tab label="View all statements"/>
-        <Tab label="View all guidelines"/>
-      </Tabs>
-
-      <TabPanel value={value} index={0}>
-        <div className={classes.search}>
-          <div className={classes.searchIconButton}>
-            <IconButton type='submit'>
-              <div className={classes.searchIcon}>
-                <SearchIcon />
-              </div>
-            </IconButton>
+        <TabPanel value={value} index={0}>
+          <div className={classes.search}>
+            <div className={classes.searchIconButton}>
+              <IconButton type='submit'>
+                <div className={classes.searchIcon}>
+                  <SearchIcon />
+                </div>
+              </IconButton>
+            </div>
+            <InputBase
+              placeholder='Search'
+              classes={{
+                root: classes.inputRoot,
+                input: classes.inputInput,
+              }}
+              inputProps={{ 'aria-label': 'search' }}
+              onKeyDown={keyPressSearch}
+            />
           </div>
-          <InputBase
-            placeholder='Search'
-            classes={{
-              root: classes.inputRoot,
-              input: classes.inputInput,
-            }}
-            inputProps={{ 'aria-label': 'search' }}
-            onKeyDown={keyPressSearch}
-          />
-        </div>
-      </TabPanel>
-      <TabPanel value={value} index={9 /*TODO: change index*/}>
-        <FlexibleTable useGetAll={useGetAllDefinitions} disabledAttributes={['unique_id']}/>
-      </TabPanel>
-      <TabPanel value={value} index={2}>
-        <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit']}/>
-      </TabPanel>
-      <TabPanel value={value} index={3}>
-        <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit']}/>
-      </TabPanel>
-
+        </TabPanel>
+        <TabPanel value={value} index={9 /*TODO: change index*/}>
+          <FlexibleTable useGetAll={useGetAllDefinitions} disabledAttributes={['unique_id']} />
+        </TabPanel>
+        <TabPanel value={value} index={2}>
+          <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit']} />
+        </TabPanel>
+        <TabPanel value={value} index={3}>
+          <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit']} />
+        </TabPanel>
+      </Paper>
     </div>
   );
 };

@@ -11,11 +11,13 @@ import EditIcon from '@material-ui/icons/Edit';
 
 export const nodeTypeData = 'row';
 const nodeSpec = {
-  beginDrag: componentProps => ({ node: {
-    title: componentProps.data.Statement, 
-    expanded: true, 
-    data: {unique_id: componentProps.data.unique_id, statement: componentProps.data.Statement, type: componentProps.data.Type},
-  }})
+  beginDrag: componentProps => ({
+    node: {
+      title: componentProps.data.Statement,
+      expanded: true,
+      data: { unique_id: componentProps.data.unique_id, statement: componentProps.data.Statement, type: componentProps.data.Type },
+    }
+  })
 };
 const nodeCollect = (connect, monitor) => ({
   connectDragSource: connect.dragSource(),
@@ -28,9 +30,9 @@ function DragTableRow({ actionsCol, actionsFunc, data, displayCol, draggable, co
   return (
     <TableRow innerRef={instance => (draggable) ? connectDragSource(instance) : instance}>
       {/*Object.values(data).map((value) => (<TableCell key={data.unique_id+value}>{value}</TableCell>))*/}
-      {Object.keys(data).map((key) => (displayCol.includes(key)) ? (<TableCell key={data.unique_id+data[key]}>{data[key]}</TableCell>) : undefined)}
-      
-      {(actionsCol.length !== 0) ? 
+      {Object.keys(data).map((key) => (displayCol.includes(key)) ? (<TableCell key={data.unique_id + data[key]}>{data[key]}</TableCell>) : undefined)}
+
+      {(actionsCol.length !== 0) ?
         <TableCell key={'Action'}>
           {(actionsCol.map((action) => {
             if (action === 'edit') {
