@@ -39,23 +39,6 @@ class CurationFact:
                 conn.close()
             
         return facts
-
-    def retrieveByID(self,id):
-        facts=None
-        conn=None
-        try:
-            conn=sqlite3.connect(self.db)
-            curs=conn.cursor()
-            
-            curs.execute('SELECT unique_id, json_content FROM facts WHERE unique_id=?',(id,))
-            #facts=dict([(unique_id,json.loads(json_content)) for unique_id,json_content in curs.fetchall()])
-            facts=[json.loads(json_content) for unique_id,json_content in curs.fetchall()]
-        finally:
-            if conn is not None:
-                conn.close()
-            
-        return facts
-        
         
     def save(self,fact_type,json_content):
         if fact_type=='guidelines':
@@ -114,9 +97,6 @@ class MyHandler(BaseHTTPRequestHandler):
         if url.path == '/curation' and 'type' in fields and fields['type'][0] in ['definitions','guidelines','statements']:
             self._send_headers()
             self.wfile.write(json.dumps(curation_fact.retrieveByType(fields['type'][0])).encode('utf-8'))
-        elif url.path == '/curation' and 'id' in fields:
-            self._send_headers()
-            self.wfile.write(json.dumps(curation_fact.retrieveByID(fields['id'][0])).encode('utf-8'))
         else:
             self._send_error()
             self.wfile.write('Invalid URL'.encode('utf-8'))

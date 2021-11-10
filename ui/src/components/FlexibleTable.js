@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import pick from 'lodash/pick';
 
 import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import IconButton from '@material-ui/core/IconButton';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -13,6 +13,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TablePagination from '@material-ui/core/TablePagination';
+import TextField from '@material-ui/core/TextField';
 import Paper from '@material-ui/core/Paper';
 import Select from '@material-ui/core/Select';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
@@ -49,7 +50,7 @@ function TablePaginationActions({ count, page, rowsPerPage, onPageChange }) {
   };
 
   return (
-    <Box >
+    <Box sx={{ flexShrink: 0, ml: 2.5 }}>
       <IconButton
         onClick={handleFirstPageButtonClick}
         disabled={page === 0}
@@ -109,14 +110,15 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function FlexibleTable({useGetAll, updateRow, addButton, filterBurron, draggable, displayCol, actionsCol, disabledAttributes}) {
+function FlexibleTable({ useGetAll, updateRow, addButton, filterBurron, draggable, displayCol, actionsCol, disabledAttributes }) {
 
   const classes = useStyles();
 
-  const [openEdit, setOpenEdit] = useState({open: false, data: {}});
+  const [openEdit, setOpenEdit] = useState({ open: false, data: {} });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [filter, setFilter] = useState('all');
+  const [selFilter, setSelFilter] = useState('all');
+  const [textFilter, setTextFilter] = useState('');
 
   const {
     data,
@@ -127,7 +129,7 @@ function FlexibleTable({useGetAll, updateRow, addButton, filterBurron, draggable
   if (isLoading) {
     return (
       <div className={classes.loading}>
-        <CircularProgress  />
+        <CircularProgress />
       </div>
     );
   } else if (isError) {
@@ -139,67 +141,88 @@ function FlexibleTable({useGetAll, updateRow, addButton, filterBurron, draggable
     );
   }
 
-  let filterData = data.map((data) => (displayCol.length === 0) ? data : pick(data, displayCol));
-  filterData = filterData.filter((data) => data.type === filter || filter === 'all');
+  let filterData = data.filter((data) => selFilter === 'all' || data.type === selFilter);
+  filterData = filterData.filter((data) => textFilter === '' || data.Statement.toLowerCase().includes(textFilter));
   const filterFirstElement = (typeof filterData[0] !== 'undefined') ? filterData[0] : [];
 
-  const handleOpenEdit = (row) => setOpenEdit({open: true, data: row});
-  const handleCloseEdit = () => setOpenEdit({open: false, data: {}});
+  // If you don't specify the displayCol, the default is to show all
+  displayCol = (displayCol.length === 0) ? Object.keys(filterFirstElement) : displayCol;
+
+  const handleOpenEdit = (row) => setOpenEdit({ open: true, data: row });
+  const handleCloseEdit = () => setOpenEdit({ open: false, data: {} });
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filterData.length) : 0;
 
   // TODO: this approach for the add item has to be changed
-  const bb = Object.keys(filterFirstElement).reduce((a, v) => ({ ...a, [v]: ''}), {}) 
+  const bb = Object.keys(filterFirstElement).reduce((a, v) => ({ ...a, [v]: '' }), {})
   delete bb['unique_id'];
 
   return (
     <div>
-      <EditModal disabledAttributes={disabledAttributes} openModal={openEdit} setOpenModal={setOpenEdit} handleSubmitModal={updateRow} handleCloseModal={handleCloseEdit}/>
-      
+      <EditModal disabledAttributes={disabledAttributes} openModal={openEdit} setOpenModal={setOpenEdit} handleSubmitModal={updateRow} handleCloseModal={handleCloseEdit} />
+
       <TableContainer className={classes.page} component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>
-                {(addButton) ?
-                  <IconButton onClick={() => handleOpenEdit(bb)}>
-                    <AddIcon />
-                  </IconButton>
-                  : undefined
-                }
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <TextField 
+                    label="Filter by statement" 
+                    variant="outlined" 
+                    value={textFilter}
+                    onChange={(event) => setTextFilter(event.target.value)}
+                  />
 
-                {(filterBurron) ?
-                  <Select
-                    value={filter}
-                    onChange={(event) => setFilter(event.target.value)}
-                  >
-                    <MenuItem value={'all'}>all</MenuItem>
-                    <MenuItem value={'statement'}>statement</MenuItem>
-                    <MenuItem value={'guideline'}>guideline</MenuItem>
-                    <MenuItem value={'cancer_term_definition'}>cancer_term_definition</MenuItem>
-                    <MenuItem value={'drug_dictionary_definition'}>drug_dictionary_definition</MenuItem>
-                    <MenuItem value={'genetics_term_definition'}>genetics_term_definition</MenuItem>
-                  </Select>
-                  : undefined
-                }
+                  {(addButton) ?
+                    <Button variant="outlined" endIcon={<AddIcon />} onClick={() => handleOpenEdit(bb)}>
+                      Create
+                    </Button>
+                    : undefined
+                  }
+
+                  {(filterBurron) ?
+                    <Select variant="outlined"
+                      value={selFilter}
+                      onChange={(event) => setSelFilter(event.target.value)}
+                    >
+                      <MenuItem value={'all'}>all</MenuItem>
+                      <MenuItem value={'statement'}>statement</MenuItem>
+                      <MenuItem value={'guideline'}>guideline</MenuItem>
+                      <MenuItem value={'cancer_term_definition'}>cancer_term_definition</MenuItem>
+                      <MenuItem value={'drug_dictionary_definition'}>drug_dictionary_definition</MenuItem>
+                      <MenuItem value={'genetics_term_definition'}>genetics_term_definition</MenuItem>
+                    </Select>
+                    : undefined
+                  }
+                </Box>
               </TableCell>
+            </TableRow>
 
+            <TableRow>
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                colSpan={Object.keys(filterFirstElement).length}
                 count={filterData.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={(event, newPage) => setPage(newPage)}
-                onRowsPerPageChange={(event) => {setRowsPerPage(parseInt(event.target.value, 10)); setPage(0);}}
+                onRowsPerPageChange={(event) => { setRowsPerPage(parseInt(event.target.value, 10)); setPage(0); }}
                 ActionsComponent={TablePaginationActions}
               />
             </TableRow>
 
             <TableRow>
               {/*(tableAttributes.length !== 0) ? tableAttributes.map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>*/}
-              {(typeof filterFirstElement !== 'undefined') ? Object.keys(filterFirstElement).map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>}
+              {(typeof filterFirstElement !== 'undefined') ? Object.keys(filterFirstElement).map((column) => (displayCol.includes(column)) ? 
+                (<TableCell key={column}>{column}</TableCell>) : undefined) 
+                : <TableCell>No Data</TableCell>
+              }
               {(actionsCol.length !== 0) ? <TableCell key={'Action'}>{'Action'}</TableCell> : undefined /* Adding action column if needed */}
             </TableRow>
           </TableHead>
@@ -207,9 +230,8 @@ function FlexibleTable({useGetAll, updateRow, addButton, filterBurron, draggable
             {(rowsPerPage > 0
               ? filterData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               : filterData
-            ).map((row) => (
-              <DragTableRow key={row.unique_id} draggable={draggable} data={row} actionsCol={actionsCol} actionsFunc={[() => handleOpenEdit(row), (() => undefined)]}/>
-            ))}
+            ).map((row) => (<DragTableRow key={row.unique_id} draggable={draggable} data={row} displayCol={displayCol} actionsCol={actionsCol} actionsFunc={[() => handleOpenEdit(row), (() => undefined)]} />)
+            )}
 
             {emptyRows > 0 && (
               <TableRow style={{ height: 53 * emptyRows }}>

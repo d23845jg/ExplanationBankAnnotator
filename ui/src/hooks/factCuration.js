@@ -1,7 +1,6 @@
 import useSWR from 'swr'
 
 import { 
-  getFact,
   getAllDefinitions,
   getAllGuidelines, 
   getAllStatements, 
@@ -9,21 +8,6 @@ import {
   postStatement 
 } from '../api/factCuration';
 
-export function useGetFact (unique_id) {
-
-  const { data, error } = useSWR('FACT_CACHE_KEY', async () => await getFact({ unique_id }), {
-    revalidateIfStale: true,
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    revalidateOnMount: true
-  });
-  
-  return {
-    data,
-    isLoading: !error && !data,
-    isError: error
-  };
-}
 
 export function useGetAllDefinitions () {
 

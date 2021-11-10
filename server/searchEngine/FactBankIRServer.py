@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Mean Pooling - Take attention mask into account for correct averaging
 def mean_pooling(model_output, attention_mask):
-    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+    token_embeddings = model_output[0] # First element of model_output contains all token embeddings
     input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
     sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
     sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
@@ -67,12 +67,12 @@ class RetrieveFact:
             {
                 'cosine_similarity': cos_sim[i],
                 'unique_id': filtered_facts_df.unique_id.values[i],
-                'statement': filtered_facts_df.text.values[i], # self.breastcancer_facts_df.statement[i],
-                'resource': '', #self.breastcancer_facts_df.resource[i],
+                'Statement': filtered_facts_df.text.values[i], # self.breastcancer_facts_df.statement[i],
+                'Resource': '', #self.breastcancer_facts_df.resource[i],
                 #'LoE/GoR':self.breastcancer_facts_df.LoE/GoR[i],
-                'consensus': '', #validate(self.breastcancer_facts_df.consensus[i]),
-                'type': filtered_facts_df.type.values[i], #validate(self.breastcancer_facts_df.type[i]),
-                'section': '' #validate(self.breastcancer_facts_df.section[i])
+                'Consensus': '', #validate(self.breastcancer_facts_df.consensus[i]),
+                'Type': filtered_facts_df.type.values[i], #validate(self.breastcancer_facts_df.type[i]),
+                'Section': '' #validate(self.breastcancer_facts_df.section[i])
             }
             for i in heapq.nlargest(20,range(len(filtered_facts_df)),key=lambda i:cos_sim[i])
         ]

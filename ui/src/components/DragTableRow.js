@@ -7,15 +7,14 @@ import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 
 import EditIcon from '@material-ui/icons/Edit';
-import DeleteIcon from '@material-ui/icons/Delete';
 
 
 export const nodeTypeData = 'row';
 const nodeSpec = {
-  beginDrag: componentProps => ({ node: { 
-    title: componentProps.data.statement, 
+  beginDrag: componentProps => ({ node: {
+    title: componentProps.data.Statement, 
     expanded: true, 
-    data: {unique_id: componentProps.data.unique_id, statement: componentProps.data.statement, type: componentProps.data.type},
+    data: {unique_id: componentProps.data.unique_id, statement: componentProps.data.Statement, type: componentProps.data.Type},
   }})
 };
 const nodeCollect = (connect, monitor) => ({
@@ -24,11 +23,12 @@ const nodeCollect = (connect, monitor) => ({
   // didDrop: !!monitor.didDrop(),
 });
 
-function DragTableRow({ actionsCol, actionsFunc, data, draggable, connectDragSource }) {
+function DragTableRow({ actionsCol, actionsFunc, data, displayCol, draggable, connectDragSource }) {
 
   return (
     <TableRow innerRef={instance => (draggable) ? connectDragSource(instance) : instance}>
-      {Object.values(data).map((value) => (<TableCell key={data.unique_id+value}>{value}</TableCell>))}
+      {/*Object.values(data).map((value) => (<TableCell key={data.unique_id+value}>{value}</TableCell>))*/}
+      {Object.keys(data).map((key) => (displayCol.includes(key)) ? (<TableCell key={data.unique_id+data[key]}>{data[key]}</TableCell>) : undefined)}
       
       {(actionsCol.length !== 0) ? 
         <TableCell key={'Action'}>
@@ -37,13 +37,6 @@ function DragTableRow({ actionsCol, actionsFunc, data, draggable, connectDragSou
               return (
                 <IconButton key={action} color="default" onClick={actionsFunc[0]}>
                   <EditIcon />
-                </IconButton>
-              );
-            }
-            else if (action === 'delete') {
-              return (
-                <IconButton key={action} color="default" onClick={actionsFunc[1]}>
-                  <DeleteIcon />
                 </IconButton>
               );
             }
@@ -63,6 +56,7 @@ DragTableRow.propTypes = {
   actionsFunc: PropTypes.arrayOf(PropTypes.func).isRequired,
   data: PropTypes.object.isRequired,
   draggable: PropTypes.bool.isRequired,
+  displayCol: PropTypes.array.isRequired,
   connectDragSource: PropTypes.func.isRequired,
 };
 

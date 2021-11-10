@@ -97,19 +97,11 @@ function MainContent() {
     }
   }
 
-  function keyPressFind(event) {
-    // keyCode 13 is Enter key
-    if(event.keyCode === 13){
-       history.push(`/find?id=${event.target.value}`)
-    }
-  }
-
   return (
     <div>
 
       <Tabs value={value} onChange={(_, value) => setValue(value)}>
         <Tab label="Search"/>
-        <Tab label="Find fact"/>
         <Tab label="View all definitions"/>
         <Tab label="View all statements"/>
         <Tab label="View all guidelines"/>
@@ -117,52 +109,32 @@ function MainContent() {
 
       <TabPanel value={value} index={0}>
         <div className={classes.search}>
-            <div className={classes.searchIconButton}>
-              <IconButton type='submit'>
+          <div className={classes.searchIconButton}>
+            <IconButton type='submit'>
               <div className={classes.searchIcon}>
                 <SearchIcon />
               </div>
-              </IconButton>
-            </div>
-            <InputBase
-              placeholder='Search'
-              classes={{
-                root: classes.inputRoot,
-                input: classes.inputInput,
-              }}
-              inputProps={{ 'aria-label': 'search' }}
-              onKeyDown={keyPressSearch}
-            />
+            </IconButton>
           </div>
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        <div className={classes.search}>
-            <div className={classes.searchIconButton}>
-              <IconButton type='submit'>
-              <div className={classes.searchIcon}>
-                <SearchIcon />
-              </div>
-              </IconButton>
-            </div>
-            <InputBase
-              placeholder='Search fact by ID …'
-              classes={{
-                root: classes.inputRoot,
-                input: classes.inputInput,
-              }}
-              inputProps={{ 'aria-label': 'search' }}
-              onKeyDown={keyPressFind}
-            />
-          </div>
+          <InputBase
+            placeholder='Search'
+            classes={{
+              root: classes.inputRoot,
+              input: classes.inputInput,
+            }}
+            inputProps={{ 'aria-label': 'search' }}
+            onKeyDown={keyPressSearch}
+          />
+        </div>
       </TabPanel>
       <TabPanel value={value} index={9 /*TODO: change index*/}>
         <FlexibleTable useGetAll={useGetAllDefinitions} disabledAttributes={['unique_id']}/>
       </TabPanel>
-      <TabPanel value={value} index={3}>
-        <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit', 'delete']}/>
+      <TabPanel value={value} index={2}>
+        <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit']}/>
       </TabPanel>
-      <TabPanel value={value} index={4}>
-        <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit', 'delete']}/>
+      <TabPanel value={value} index={3}>
+        <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit']}/>
       </TabPanel>
 
     </div>
