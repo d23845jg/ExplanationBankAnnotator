@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { SortableTreeWithoutDndContext as SortableTree, addNodeUnderParent, removeNodeAtPath } from "react-sortable-tree";
-import PropTypes from 'prop-types';
+import { 
+  SortableTreeWithoutDndContext as SortableTree, 
+  addNodeUnderParent, 
+  removeNodeAtPath,
+} from "react-sortable-tree";
 
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -19,7 +22,7 @@ import { saveTreeData } from '../../../hooks/tree';
 
 const useStyles = makeStyles((theme) => ({
   sortableTree: {
-    height: '85vh',
+    height: '75vh',
     // isVirtualized={false}
   },
   buttons: {
@@ -28,14 +31,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function TreeContent({ claim }) {
+function TreeContent() {
 
   const classes = useStyles();
 
   const [configModal, setConfigModal] = useState({ openModal: false, nodePath: [] });
-  const [treeData, setTreeData] = useState([
-    { title: claim, expanded: true, data: { unique_id: '0', statement: claim } }
-  ]);
+  const [treeData, setTreeData] = useState([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(false);
 
@@ -120,10 +121,6 @@ function TreeContent({ claim }) {
       </div>
     </div>
   );
-};
-
-TreeContent.propTypes = {
-  claim: PropTypes.string.isRequired,
 };
 
 export default TreeContent;

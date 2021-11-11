@@ -94,6 +94,7 @@ class RetrieveFact:
             for i in heapq.nlargest(20, range(len(filtered_facts_df)), key=lambda i:cos_sim[i])
         ]
 
+
 retrieve_fact = RetrieveFact(fp='./output/breast_cancer_facts_sample.csv',
                              sen_emb_fp='./output/all_fact_sentence_embeddings_sample.npy')
 
