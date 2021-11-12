@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 
 import IconButton from '@material-ui/core/IconButton';
@@ -113,7 +113,7 @@ function SearchContent() {
               <FlexibleTable useGetAll={useGetCancerFacts} query={query} filterBurron={true} draggable={true} displayCol={['Statement', 'Resource', 'Type']} disabledAttributes={[]} />
             </div>
             <div className={classes.sortableTree}>
-              <TreeContent />
+              <TreeContent query={query} />
             </div>
           </div>
         )

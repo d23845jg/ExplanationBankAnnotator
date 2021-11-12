@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  SortableTreeWithoutDndContext as SortableTree, 
-  addNodeUnderParent, 
+import {
+  SortableTreeWithoutDndContext as SortableTree,
+  addNodeUnderParent,
   removeNodeAtPath,
 } from "react-sortable-tree";
+import PropTypes from 'prop-types';
 
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -11,6 +12,7 @@ import Snackbar from '@material-ui/core/Snackbar';
 import { makeStyles } from '@material-ui/core/styles';
 
 import AddCircleIcon from '@material-ui/icons/AddCircle';
+import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import SaveIcon from '@material-ui/icons/Save';
 
@@ -23,21 +25,22 @@ import { saveTreeData } from '../../../hooks/tree';
 const useStyles = makeStyles((theme) => ({
   sortableTree: {
     height: '75vh',
+    paddingTop: theme.spacing(8),
+    paddingLeft: theme.spacing(2)
     // isVirtualized={false}
   },
   buttons: {
-    margin: theme.spacing(1),
     float: 'right',
   },
 }));
 
-function TreeContent() {
+function TreeContent({ query }) {
 
   const classes = useStyles();
 
   const [configModal, setConfigModal] = useState({ openModal: false, nodePath: [] });
   const [treeData, setTreeData] = useState([]);
-  const [sending, setSending] = useState(false);
+  const [send, setSend] = useState(false);
   const [error, setError] = useState(false);
 
   /*function getNodeKey({node}) {
@@ -53,6 +56,7 @@ function TreeContent() {
   };
 
   function handleSubmitModal(data) {
+    console.log(configModal.nodePath);
     setTreeData(treeData =>
       addNodeUnderParent({
         treeData: treeData,
@@ -73,11 +77,27 @@ function TreeContent() {
     setConfigModal({ openModal: false, nodePath: [] });
   };
 
+  function handleInsertQuery() {
+    setTreeData(treeData =>
+      addNodeUnderParent({
+        treeData: treeData,
+        parentKey: configModal.nodePath[configModal.nodePath.length - 1],
+        expandParent: true,
+        getNodeKey,
+        newNode: {
+          title: query,
+          expanded: true,
+          data: { unique_id: 0, statement: query }
+        }
+      }).treeData
+    );
+  };
+
   async function handleSaveTree() {
-    setSending(true);
+    setSend(true);
     try { await saveTreeData(treeData); }
     catch (err) { setError(true); }
-    setSending(false);
+    setSend(false);
   };
 
   const handleClose = (event, reason) => {
@@ -88,39 +108,49 @@ function TreeContent() {
   };
 
   return (
-    <div className={classes.sortableTree}>
-      <Snackbar open={error} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="error" >
-          Tree could not be saved
-        </Alert>
-      </Snackbar>
-      <AddChildTreeModal openModal={configModal.openModal} handleSubmitModal={handleSubmitModal} handleCloseModal={handleCloseModal} />
-      <SortableTree
-        treeData={treeData}
-        dndType={nodeTypeData}
-        onChange={treeData => setTreeData(treeData)}
-        generateNodeProps={({ node, path }) => ({
-          buttons:
-            [
-              <IconButton color="default" onClick={() => handleOpenModal(path)}>
-                <AddCircleIcon />
-              </IconButton>,
-              // The query should not have the delete button
-              (node.data.unique_id === '0') ? [] :
-                <IconButton color="default" onClick={() => setTreeData(treeData => removeNodeAtPath({ treeData, path, getNodeKey }))}>
-                  <DeleteIcon />
-                </IconButton>
-            ],
-        })}
-      />
-
+    <div>
       <div className={classes.buttons}>
-        <Button variant="contained" color="primary" startIcon={<SaveIcon />} onClick={handleSaveTree} disabled={sending}>
-          {sending ? 'Saving' : 'Save'}
+        <Button variant="outlined" color="primary" endIcon={<AddIcon />} onClick={handleInsertQuery}>
+          {'Insert query'}
         </Button>
+        
+        <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<SaveIcon />} onClick={handleSaveTree} disabled={send}>
+          {send ? 'Saving' : 'Save'}
+        </Button>
+      </div>
+
+      <div className={classes.sortableTree}>
+        <Snackbar open={error} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity="error" >
+            Tree could not be saved
+          </Alert>
+        </Snackbar>
+        <AddChildTreeModal openModal={configModal.openModal} handleSubmitModal={handleSubmitModal} handleCloseModal={handleCloseModal} />
+        <SortableTree
+          treeData={treeData}
+          dndType={nodeTypeData}
+          onChange={treeData => setTreeData(treeData)}
+          generateNodeProps={({ node, path }) => ({
+            buttons:
+              [
+                <IconButton color="default" onClick={() => handleOpenModal(path)}>
+                  <AddCircleIcon />
+                </IconButton>,
+                // The query should not have the delete button
+                (node.data.unique_id === '0') ? [] :
+                  <IconButton color="default" onClick={() => setTreeData(treeData => removeNodeAtPath({ treeData, path, getNodeKey }))}>
+                    <DeleteIcon />
+                  </IconButton>
+              ],
+          })}
+        />
       </div>
     </div>
   );
+};
+
+TreeContent.prototype = {
+  query: PropTypes.string.isRequired,
 };
 
 export default TreeContent;

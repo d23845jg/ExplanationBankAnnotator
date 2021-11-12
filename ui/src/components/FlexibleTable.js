@@ -170,12 +170,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
           <TableHead>
             <TableRow>
               <TableCell colSpan={displayCol.length + 1}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
+                <div>
                   <TextField
                     label="Filter by statement"
                     variant="outlined"
@@ -184,14 +179,21 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
                   />
 
                   {(addButton) ?
-                    <Button variant="outlined" endIcon={<AddIcon />} onClick={() => handleOpenEdit(bb)}>
+                    <Button
+                      style={{ float: 'right' }}
+                      variant="outlined"
+                      endIcon={<AddIcon />}
+                      onClick={() => handleOpenEdit(bb)}
+                    >
                       Create
                     </Button>
                     : undefined
                   }
 
                   {(filterBurron) ?
-                    <Select variant="outlined"
+                    <Select
+                      style={{ marginLeft: '2vh' }}
+                      variant="outlined"
                       value={selFilter}
                       onChange={(event) => setSelFilter(event.target.value)}
                     >
@@ -204,7 +206,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
                     </Select>
                     : undefined
                   }
-                </Box>
+                </div>
               </TableCell>
             </TableRow>
           </TableHead>
