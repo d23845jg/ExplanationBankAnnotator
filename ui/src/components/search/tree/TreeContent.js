@@ -13,6 +13,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AddIcon from '@material-ui/icons/Add';
+import ClearIcon from '@material-ui/icons/Clear';
 import DeleteIcon from '@material-ui/icons/Delete';
 import SaveIcon from '@material-ui/icons/Save';
 
@@ -56,7 +57,6 @@ function TreeContent({ query }) {
   };
 
   function handleSubmitModal(data) {
-    console.log(configModal.nodePath);
     setTreeData(treeData =>
       addNodeUnderParent({
         treeData: treeData,
@@ -87,10 +87,14 @@ function TreeContent({ query }) {
         newNode: {
           title: query,
           expanded: true,
-          data: { unique_id: 0, statement: query }
+          data: { unique_id: 0, statement: query, query }
         }
       }).treeData
     );
+  };
+
+  function handleClearTree() {
+    setTreeData([]);
   };
 
   async function handleSaveTree() {
@@ -112,6 +116,10 @@ function TreeContent({ query }) {
       <div className={classes.buttons}>
         <Button variant="outlined" color="primary" endIcon={<AddIcon />} onClick={handleInsertQuery}>
           {'Insert query'}
+        </Button>
+
+        <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<ClearIcon />} onClick={handleClearTree}>
+          {'Clear Tree'}
         </Button>
         
         <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<SaveIcon />} onClick={handleSaveTree} disabled={send}>
