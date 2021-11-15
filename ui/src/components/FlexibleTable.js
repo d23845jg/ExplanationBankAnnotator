@@ -241,7 +241,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
             {(rowsPerPage > 0
               ? filterData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               : filterData
-            ).map((row) => (<DragTableRow key={row.unique_id} draggable={draggable} query={query} data={row} displayCol={displayCol} actionsCol={actionsCol} actionsFunc={[() => handleOpenEdit(row), (() => undefined)]} />)
+            ).map((row) => (<DragTableRow key={row.unique_id} draggable={draggable} query={query} data={row} allQueryData={data} displayCol={displayCol} actionsCol={actionsCol} actionsFunc={[() => handleOpenEdit(row), (() => undefined)]} />)
             )}
 
             {emptyRows > 0 && (

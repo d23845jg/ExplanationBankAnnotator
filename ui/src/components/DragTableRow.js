@@ -12,22 +12,23 @@ import EditIcon from '@material-ui/icons/Edit';
 export const nodeTypeData = 'row';
 const nodeSpec = {
   beginDrag: componentProps => {
-    console.log(componentProps);
     return ({
     node: {
       title: componentProps.data.Statement,
       expanded: true,
-      data: { unique_id: componentProps.data.unique_id, statement: componentProps.data.Statement, type: componentProps.data.Type, query: componentProps.query },
+      query: componentProps.query,
+      data: componentProps.data,
+      allQueryData: componentProps.allQueryData,
     }
-  })
-}};
+  });}
+};
 const nodeCollect = (connect, monitor) => ({
   connectDragSource: connect.dragSource(),
   // isDragging: !!monitor.isDragging(),
   // didDrop: !!monitor.didDrop(),
 });
 
-function DragTableRow({ actionsCol, actionsFunc, query, data, displayCol, draggable, connectDragSource }) {
+function DragTableRow({ actionsCol, actionsFunc, data, displayCol, draggable, connectDragSource }) {
 
   return (
     <TableRow innerRef={instance => (draggable) ? connectDragSource(instance) : instance}>
@@ -60,6 +61,7 @@ DragTableRow.propTypes = {
   actionsFunc: PropTypes.arrayOf(PropTypes.func).isRequired,
   query: PropTypes.string.isRequired,
   data: PropTypes.object.isRequired,
+  allQueryData: PropTypes.array.isRequired,
   draggable: PropTypes.bool.isRequired,
   displayCol: PropTypes.array.isRequired,
   connectDragSource: PropTypes.func.isRequired,

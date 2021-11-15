@@ -104,7 +104,7 @@ function TreeContent({ query }) {
     setSend(false);
   };
 
-  const handleClose = (event, reason) => {
+  function handleAlertClose(event, reason) {
     if (reason === 'clickaway') {
       return;
     }
@@ -128,8 +128,8 @@ function TreeContent({ query }) {
       </div>
 
       <div className={classes.sortableTree}>
-        <Snackbar open={error} autoHideDuration={6000} onClose={handleClose}>
-          <Alert onClose={handleClose} severity="error" >
+        <Snackbar open={error} autoHideDuration={6000} onClose={handleAlertClose}>
+          <Alert onClose={handleAlertClose} severity="error" >
             Tree could not be saved
           </Alert>
         </Snackbar>

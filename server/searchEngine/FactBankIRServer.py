@@ -98,28 +98,47 @@ retrieve_fact = RetrieveFact(fp='./output/breast_cancer_facts_sample.csv',sen_em
 class ProcessTree():
 
     def __init__(self, path):
-        self.path = path
+        self.__path = path
+        self.__negative_samples = {}
+    
+    def __generateNegativeSamples(self, all_tree_data, query, data):
+        if query not in self.__negative_samples:
+            self.__negative_samples[query] = all_tree_data
+        self.__negative_samples[query].remove(data)
 
-    def __getAllTreeData(self, treeData, csvData):
+    def __getAllPositiveSamples(self, treeData, csv_data):
         for node in treeData:
-            csvData.append([node['data']['query'], node['data']['statement'], 1])
+            csv_data.append([node['query'], node['data']['Statement'], node['data']['unique_id'], 1])
+            self.__generateNegativeSamples(node['allQueryData'], node['query'], node['data'])
             if 'children' in node:
-                self.__getAllTreeData(node['children'], csvData)
+                self.__getAllPositiveSamples(node['children'], csv_data)
+        return csv_data
+    
+    def __getAllNegativeSamples(self):
+        csv_data = []
+        for query in self.__negative_samples:
+            negative_sample = self.__negative_samples[query]
+            for data in negative_sample:
+                csv_data.append([query, data['Statement'], data['unique_id'], 0])
+        return csv_data
 
     def generateCSVFile(self, annotationTreeData):
+        # Generate a unique id for each annotated tree
+        fileId = str(uuid.uuid4())
 
-        # check mode a+ which is append mode
-        with open(self.path, 'a+') as csvfile:
+        with open(self.__path+fileId, 'w+') as csvfile:
             writer = csv.writer(csvfile)
 
             # Header
-            # writer.writerow(["query", "statement", "label"])
+            writer.writerow(["query", "statement", "unique_id", "label"])
 
-            csvData = []
-            self.__getAllTreeData(annotationTreeData, csvData)
-            writer.writerows(csvData)
+            csv_data = self.__getAllPositiveSamples(annotationTreeData, [])
+            writer.writerows(csv_data)
 
-process_tree = ProcessTree(path='./tree/AnnotationTreeData.csv')
+            csv_data = self.__getAllNegativeSamples()
+            writer.writerows(csv_data)
+
+process_tree = ProcessTree(path='./tree/')
 
 # HTTP SERVER ------------------------------------------------------------------------------------------------------------------------------------------
 class MyHandler(BaseHTTPRequestHandler):
