@@ -64,9 +64,11 @@ function TreeContent({ query }) {
         expandParent: true,
         getNodeKey,
         newNode: {
-          title: data.statement,
+          title: data.Statement,
           expanded: true,
-          data: { unique_id: data.unique_id, statement: data.statement }
+          query,
+          data,
+          allQueryData: [],
         }
       }).treeData
     );
@@ -87,7 +89,9 @@ function TreeContent({ query }) {
         newNode: {
           title: query,
           expanded: true,
-          data: { unique_id: 0, statement: query, query }
+          query,
+          data: { unique_id: 0, Statement: query },
+          allQueryData: [],
         }
       }).treeData
     );
@@ -128,7 +132,7 @@ function TreeContent({ query }) {
       </div>
 
       <div className={classes.sortableTree}>
-        <Snackbar open={error} autoHideDuration={6000} onClose={handleAlertClose}>
+        <Snackbar open={error} autoHideDuration={5000} onClose={handleAlertClose}>
           <Alert onClose={handleAlertClose} severity="error" >
             Tree could not be saved
           </Alert>

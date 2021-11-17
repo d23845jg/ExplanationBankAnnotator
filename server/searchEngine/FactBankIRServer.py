@@ -99,21 +99,12 @@ class ProcessTree():
 
     def __init__(self, path):
         self.__path = path
-        self.__negative_samples = {}
     
     def __generateNegativeSamples(self, all_tree_data, query, data):
         if query not in self.__negative_samples:
             self.__negative_samples[query] = all_tree_data
         self.__negative_samples[query].remove(data)
 
-    def __getAllPositiveSamples(self, treeData, csv_data):
-        for node in treeData:
-            csv_data.append([node['query'], node['data']['Statement'], node['data']['unique_id'], 1])
-            self.__generateNegativeSamples(node['allQueryData'], node['query'], node['data'])
-            if 'children' in node:
-                self.__getAllPositiveSamples(node['children'], csv_data)
-        return csv_data
-    
     def __getAllNegativeSamples(self):
         csv_data = []
         for query in self.__negative_samples:
@@ -122,21 +113,36 @@ class ProcessTree():
                 csv_data.append([query, data['Statement'], data['unique_id'], 0])
         return csv_data
 
-    def generateCSVFile(self, annotationTreeData):
-        # Generate a unique id for each annotated tree
-        fileId = str(uuid.uuid4())
+    def __getAllPositiveSamples(self, treeData, csv_data):
+        for node in treeData:
+            # unique_id == -1 (manually created statements) and 0 (user query)
+            if node['data']['unique_id'] not in [-1, 0]:
+                csv_data.append([node['query'], node['data']['Statement'], node['data']['unique_id'], 1])
+                self.__generateNegativeSamples(node['allQueryData'], node['query'], node['data'])
+            if 'children' in node:
+                self.__getAllPositiveSamples(node['children'], csv_data)
+        return csv_data
 
-        with open(self.__path+fileId, 'w+') as csvfile:
+    def __generateCSVFile(self, fileId, annotationTreeData):
+        with open(self.__path+'csv/'+fileId, 'w+') as csvfile:
             writer = csv.writer(csvfile)
-
-            # Header
             writer.writerow(["query", "statement", "unique_id", "label"])
 
+            self.__negative_samples = {}
             csv_data = self.__getAllPositiveSamples(annotationTreeData, [])
             writer.writerows(csv_data)
 
             csv_data = self.__getAllNegativeSamples()
             writer.writerows(csv_data)
+    
+    def __generateJSONTreeFile(self, fileId, annotationTreeData):
+        with open(self.__path+'json/'+fileId, 'w+') as file:
+            json.dump(annotationTreeData, file)
+
+    def generateFiles(self, annotationTreeData):
+        fileId = str(uuid.uuid4())
+        self.__generateCSVFile(fileId, annotationTreeData)
+        self.__generateJSONTreeFile(fileId, annotationTreeData)
 
 process_tree = ProcessTree(path='./tree/')
 
@@ -181,15 +187,7 @@ class MyHandler(BaseHTTPRequestHandler):
 
         url = urlparse(self.path)
         if url.path == '/tree' and 'treeData' in post_data:
-            process_tree.generateCSVFile(post_data['treeData'])
-
-            """
-            treeId = str(uuid.uuid4())
-            newFactTree = {"treeId": treeId, "treeData": post_data['treeData']}
-            with open('tree/%s.json' % treeId, 'w') as file:
-                json.dump(newFactTree, file)
-            """
-
+            process_tree.generateFiles(post_data['treeData'])
             self._send_headers()
             self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
         else:

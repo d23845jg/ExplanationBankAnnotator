@@ -44,22 +44,26 @@ function AddChildTreeModal({openModal, handleSubmitModal, handleCloseModal}) {
 
   // getModalStyle is not a pure function, we roll the style only on the first render
   const [modalStyle] = useState(getModalStyle);
-  const[fact, setFact] = useState('');
+  const[fact, setFact] = useState({unique_id: -1, Statement: '', Resource: ''});
 
   const body = (
     <div style={modalStyle} className={classes.paper}>
       <Typography variant='h5' color='textPrimary' >
-        Create new child fact
+        Create new statement
       </Typography>
       <Divider />
       
       <form className={classes.form} noValidate autoComplete="off">
-        <TextField id="standard-basic" label="Fact" value={fact} onChange={(event) => setFact(event.target.value)} />
+        <TextField variant="outlined" label="Input New Fact" value={fact.Statement} onChange={(event) => setFact({...fact, Statement: event.target.value})} />
+      </form>
+      
+      <form className={classes.form} noValidate autoComplete="off">
+        <TextField variant="outlined"  label="Input Resource" value={fact.Resource} onChange={(event) => setFact({...fact, Resource: event.target.value})} />
       </form>
 
       <Button variant="contained" color="primary" endIcon={<AddCircleIcon />} onClick={() => {
-        handleSubmitModal({unique_id: '-1', statement: fact});
-        setFact('');
+        handleSubmitModal(fact);
+        setFact({});
       }}>
         Create
       </Button>
