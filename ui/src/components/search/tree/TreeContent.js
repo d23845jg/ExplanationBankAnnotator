@@ -43,6 +43,7 @@ function TreeContent({ query }) {
   const [treeData, setTreeData] = useState([]);
   const [send, setSend] = useState(false);
   const [error, setError] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   /*function getNodeKey({node}) {
     return node.data.unique_id;
@@ -103,7 +104,7 @@ function TreeContent({ query }) {
 
   async function handleSaveTree() {
     setSend(true);
-    try { await saveTreeData(treeData); }
+    try { await saveTreeData(treeData); setSuccess(true); }
     catch (err) { setError(true); }
     setSend(false);
   };
@@ -113,7 +114,17 @@ function TreeContent({ query }) {
       return;
     }
     setError(false);
+    setSuccess(false);
   };
+
+  const TreeAlert = ({ value, handleAlertClose, type, message }) => (
+    < Snackbar open={value} autoHideDuration={5000} onClose={handleAlertClose} >
+      <Alert onClose={handleAlertClose} severity={type} >
+        {message}
+      </Alert>
+    </Snackbar >
+  )
+
 
   return (
     <div>
@@ -125,18 +136,15 @@ function TreeContent({ query }) {
         <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<ClearIcon />} onClick={handleClearTree}>
           {'Clear Tree'}
         </Button>
-        
+
         <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<SaveIcon />} onClick={handleSaveTree} disabled={send}>
           {send ? 'Saving' : 'Save'}
         </Button>
       </div>
 
       <div className={classes.sortableTree}>
-        <Snackbar open={error} autoHideDuration={5000} onClose={handleAlertClose}>
-          <Alert onClose={handleAlertClose} severity="error" >
-            Tree could not be saved
-          </Alert>
-        </Snackbar>
+        <TreeAlert value={error} handleAlertClose={handleAlertClose} type={"error"} message={"Tree could not be saved"} />
+        <TreeAlert value={success} handleAlertClose={handleAlertClose} type={"success"} message={"Tree was saved successfully"} />
         <AddChildTreeModal openModal={configModal.openModal} handleSubmitModal={handleSubmitModal} handleCloseModal={handleCloseModal} />
         <SortableTree
           treeData={treeData}
