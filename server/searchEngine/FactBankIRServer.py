@@ -12,6 +12,14 @@ import numpy as np
 import heapq
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
+import requests
+
+"""
+TODO:
+· Create a proper database
+· Docker
+· 
+"""
 
 # Mean Pooling - Take attention mask into account for correct averaging
 def mean_pooling(model_output, attention_mask):
@@ -26,73 +34,63 @@ def mean_pooling(model_output, attention_mask):
 # Retrieve fact based on BioBERT -----------------------------------------------------------------------------------------------------------------------
 class RetrieveFact:
 
-    def __init__(self, fp, sen_emb_fp):
+    def __init__(self):
         # Load AutoModel from huggingface model repository
         self.tokenizer = AutoTokenizer.from_pretrained("dmis-lab/biobert-v1.1")
         self.bert = AutoModel.from_pretrained("dmis-lab/biobert-v1.1")
-
         print('BERT model loaded')
 
-        self.breastcancer_facts_df = pd.read_csv(fp)
-
-        # self.encoded_inputs=torch.load(enc_inp_fp)
-
-        with open(sen_emb_fp, 'rb') as f:
-            self.sentence_embeddings = np.load(f)
-
-        print('sentence embedding get,', self.sentence_embeddings.shape)
-
-    def retrieve(self, query, fact_type=None):
-        filtered_facts_df = None
-        if fact_type is None or fact_type == "all":
-            filtered_facts_df = self.breastcancer_facts_df.copy()
-            filtered_sentence_embeddings = self.sentence_embeddings
-        elif fact_type == "definition":
-            filter_indicate = self.breastcancer_facts_df["type"].apply(lambda x: x.endswith("_definition"))
-            filtered_facts_df = self.breastcancer_facts_df[filter_indicate]
-            filtered_sentence_embeddings = self.sentence_embeddings[
-                [i for i in range(len(self.sentence_embeddings))
-                 if filter_indicate[i]]
-            ]
-        else:
-            filter_indicate = self.breastcancer_facts_df["type"].apply(lambda x: x == fact_type)
-            filtered_facts_df = self.breastcancer_facts_df[filter_indicate]
-            filtered_sentence_embeddings = self.sentence_embeddings[
-                [i for i in range(len(self.sentence_embeddings))
-                 if filter_indicate[i]]
-            ]
-
+    def retrieve(self, query):
         encoded_input = self.tokenizer([query], padding=True, truncation=True, max_length=512, return_tensors='pt')
         with torch.no_grad():
             model_output = self.bert(**encoded_input)
-        query_embedding = mean_pooling(
-            model_output, encoded_input['attention_mask']).detach().numpy()
+        query_embedding = mean_pooling(model_output, encoded_input['attention_mask']).detach().numpy()
 
-        cos_sim = cosine_similarity(
-            query_embedding, filtered_sentence_embeddings)[0].tolist()
+        all_facts_with_embeddings = requests.get("http://localhost:8081/facts").json()
 
-        def validate(value):
-            return value if not pd.isna(value) else 'NaN'
+        filtered_facts_df = []
+        filtered_sentence_embeddings = []
+        for fact in all_facts_with_embeddings:
+            embedding = fact.pop('Embedding', [])
+            filtered_facts_df.append(fact)
+            filtered_sentence_embeddings.append(embedding[0])
+        filtered_sentence_embeddings = np.array(filtered_sentence_embeddings)
+        print('sentence embedding get,', filtered_sentence_embeddings.shape)
+
+        cos_sim = cosine_similarity(query_embedding, filtered_sentence_embeddings)[0].tolist()
+
+        # def validate(value):
+        #     return value if not pd.isna(value) else 'NaN'
 
         return [
             {
                 'cosine_similarity': cos_sim[i],
-                'unique_id': filtered_facts_df.unique_id.values[i],
+                'unique_id': filtered_facts_df[i]['unique_id'],
                 # self.breastcancer_facts_df.statement[i],
-                'Statement': filtered_facts_df.text.values[i],
+                'Statement': filtered_facts_df[i]['Statement'],
                 'Resource': '',  # self.breastcancer_facts_df.resource[i],
                 # 'LoE/GoR':self.breastcancer_facts_df.LoE/GoR[i],
                 # validate(self.breastcancer_facts_df.consensus[i]),
                 'Consensus': '',
                 # validate(self.breastcancer_facts_df.type[i]),
-                'Type': filtered_facts_df.type.values[i],
+                'Type': filtered_facts_df[i]['Type'],
                 # validate(self.breastcancer_facts_df.section[i])
                 'Section': ''
             }
             for i in heapq.nlargest(20, range(len(filtered_facts_df)), key=lambda i:cos_sim[i])
         ]
 
-retrieve_fact = RetrieveFact(fp='./output/breast_cancer_facts_sample.csv',sen_emb_fp='./output/all_fact_sentence_embeddings_sample.npy')
+    def findEmbedding(self, statement):
+        encoded_input = self.tokenizer([statement], padding=True, truncation=True, max_length=512, return_tensors='pt')
+        with torch.no_grad():
+            model_output = self.bert(**encoded_input)
+        query_embedding = mean_pooling(model_output, encoded_input['attention_mask']).detach().numpy().tolist()
+
+        return {
+            'Embedding': query_embedding
+        }
+
+retrieve_fact = RetrieveFact()
 
 # Pre-Process Tree -------------------------------------------------------------------------------------------------------------------------------------
 class ProcessTree():
@@ -124,7 +122,7 @@ class ProcessTree():
         return csv_data
 
     def __generateCSVFile(self, fileId, annotationTreeData):
-        with open(self.__path+'csv/'+fileId, 'w+') as csvfile:
+        with open(self.__path+'csv/'+fileId+'.csv', 'w+') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["query", "statement", "unique_id", "label"])
 
@@ -136,7 +134,7 @@ class ProcessTree():
             writer.writerows(csv_data)
     
     def __generateJSONTreeFile(self, fileId, annotationTreeData):
-        with open(self.__path+'json/'+fileId, 'w+') as file:
+        with open(self.__path+'json/'+fileId+'.json', 'w+') as file:
             json.dump(annotationTreeData, file)
 
     def generateFiles(self, annotationTreeData):
@@ -151,7 +149,7 @@ class MyHandler(BaseHTTPRequestHandler):
 
     def _send_headers(self):
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', 'http://localhost:3000')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header('Content-Type', 'application/json')
@@ -159,7 +157,7 @@ class MyHandler(BaseHTTPRequestHandler):
 
     def _send_error(self):
         self.send_response(400)
-        self.send_header('Access-Control-Allow-Origin', 'http://localhost:3000')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header('Content-Type', 'application/json')
@@ -170,12 +168,13 @@ class MyHandler(BaseHTTPRequestHandler):
         url = urlparse(self.path)
         fields = parse_qs(url.query)
         if url.path == '/search' and 'query' in fields:
-            if 'type' in fields and fields['type'][0] in ["all", "definition", "guideline", "statement"]:
-                self._send_headers()
-                self.wfile.write(json.dumps(retrieve_fact.retrieve(fields['query'][0], fields['type'][0])).encode('utf-8'))
-            else:
-                self._send_headers()
-                self.wfile.write(json.dumps(retrieve_fact.retrieve(fields['query'][0], "all")).encode('utf-8'))
+            self._send_headers()
+            self.wfile.write(json.dumps(retrieve_fact.retrieve(fields['query'][0])).encode('utf-8'))
+
+        elif url.path == '/embedding' and 'statement' in fields:
+            self._send_headers()
+            self.wfile.write(json.dumps(retrieve_fact.findEmbedding(fields['statement'][0])).encode('utf-8'))
+
         else:
             self._send_error()
             self.wfile.write('Invalid URL'.encode('utf-8'))

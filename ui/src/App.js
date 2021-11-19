@@ -16,7 +16,7 @@ function App() {
           <Route path='/search' component={MainContent} />
 
           {/* TODO: create Notfound component*/}
-          <Route component={() => <div>hola</div>} />
+          <Route component={() => <div>Page not found</div>} />
         </Switch>
       </Router>
     </div>

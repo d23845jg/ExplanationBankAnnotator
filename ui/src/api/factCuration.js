@@ -1,27 +1,20 @@
 import axios from 'axios'
 
-
-export const getAllDefinitions = () => 
+export const getAllFacts = () =>
   axios
-    .get('http://localhost:8080/curation?type=definitions')
+    .get('http://localhost:8081/facts')
     .then(response => response.data);
 
-    export const getAllGuidelines = () => 
+export const postAllFacts = ({ factData }) =>
   axios
-    .get('http://localhost:8080/curation?type=guidelines')
+    .post('http://localhost:8081/save?type=explanationBank', factData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
     .then(response => response.data);
 
-export const getAllStatements = () => 
+export const postFact = ({ factData }) =>
   axios
-    .get('http://localhost:8080/curation?type=statements')
-    .then(response => response.data);
-
-export const postGuidelines = ({ factData }) => 
-  axios
-    .post('http://localhost:8080/save?type=guidelines', { factData })
-    .then(response => response.data);
-
-export const postStatement = ({ factData }) => 
-  axios
-    .post('http://localhost:8080/save?type=statements', { factData })
+    .post('http://localhost:8081/save', { factData })
     .then(response => response.data);

@@ -4,14 +4,12 @@ import Box from '@material-ui/core/Box';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
+import AddNewFacts from './AddNewFacts';
 import FlexibleTable from './FlexibleTable';
 import SearchContent from './search/SearchContent';
 import {
-  useGetAllDefinitions,
-  useGetAllGuidelines,
-  useGetAllStatements,
-  postAGuidelines,
-  postAStatement,
+  useGetAllFacts,
+  postAFact,
 } from '../hooks/factCuration';
 
 
@@ -42,22 +40,18 @@ function MainContent() {
     <div>
       <Tabs value={value} onChange={(_, value) => setValue(value)}>
         <Tab label="Search" />
-        <Tab label="View all definitions" />
-        <Tab label="View all statements" />
-        <Tab label="View all guidelines" />
+        <Tab label="Add new facts" />
+        <Tab label="View all facts" />
       </Tabs>
 
       <TabPanel value={value} index={0}>
         <SearchContent />
       </TabPanel>
-      <TabPanel value={value} index={9 /*TODO: change index*/}>
-        <FlexibleTable useGetAll={useGetAllDefinitions} disabledAttributes={['unique_id']} />
+      <TabPanel value={value} index={1}>
+        <AddNewFacts />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <FlexibleTable useGetAll={useGetAllStatements} updateRow={postAStatement} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit']} />
-      </TabPanel>
-      <TabPanel value={value} index={3}>
-        <FlexibleTable useGetAll={useGetAllGuidelines} updateRow={postAGuidelines} disabledAttributes={['unique_id']} addButton={true} actionsCol={['edit']} />
+        <FlexibleTable useGetAll={useGetAllFacts} updateRow={postAFact} hideDisplayCol={['unique_id', 'Embedding']} disabledAttributes={['unique_id', 'Embedding']} addButton={true} filterBurron={true} actionsCol={['edit']} />
       </TabPanel>
     </div>
   );

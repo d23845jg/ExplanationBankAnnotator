@@ -113,7 +113,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, draggable, displayCol, actionsCol, disabledAttributes }) {
+function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, draggable, showDisplayCol, hideDisplayCol, actionsCol, disabledAttributes }) {
 
   const classes = useStyles();
 
@@ -144,22 +144,28 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
     );
   }
 
+  // Finding all the Types for the select
+  const types = Array.from(new Set(data.map((row) => row.Type)));
+
+  // Filtering by Type if specified in the select, and by keyword
   let filterData = data.filter((data) => selFilter === 'all' || data.Type === selFilter);
   filterData = filterData.filter((data) => textFilter === '' || data.Statement.toLowerCase().includes(textFilter.toLowerCase()));
   const filterFirstElement = (typeof filterData[0] !== 'undefined') ? filterData[0] : [];
 
-  // If you don't specify the displayCol, the default is to show all
-  displayCol = (displayCol.length === 0) ? Object.keys(filterFirstElement) : displayCol;
+  // If you don't specify the showDisplayCol, the default is to show all
+  showDisplayCol = (showDisplayCol.length === 0) ? Object.keys(filterFirstElement) : showDisplayCol;
+  showDisplayCol = showDisplayCol.filter((column) => !hideDisplayCol.includes(column))
 
   const handleOpenEdit = (row) => setOpenEdit({ open: true, data: row });
   const handleCloseEdit = () => setOpenEdit({ open: false, data: {} });
 
-  // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filterData.length) : 0;
-
   // TODO: this approach for the add item has to be changed
   const bb = Object.keys(filterFirstElement).reduce((a, v) => ({ ...a, [v]: '' }), {})
   delete bb['unique_id'];
+  delete bb['Embedding'];
+
+  // Avoid a layout jump when reaching the last page with empty rows.
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filterData.length) : 0;
 
   return (
     <div>
@@ -169,7 +175,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell colSpan={displayCol.length + 1}>
+              <TableCell colSpan={showDisplayCol.length + 1}>
                 <div>
                   <TextField
                     label="Filter by statement"
@@ -198,11 +204,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
                       onChange={(event) => setSelFilter(event.target.value)}
                     >
                       <MenuItem value={'all'}>all</MenuItem>
-                      <MenuItem value={'statement'}>statement</MenuItem>
-                      <MenuItem value={'guideline'}>guideline</MenuItem>
-                      <MenuItem value={'cancer_term_definition'}>cancer_term_definition</MenuItem>
-                      <MenuItem value={'drug_dictionary_definition'}>drug_dictionary_definition</MenuItem>
-                      <MenuItem value={'genetics_term_definition'}>genetics_term_definition</MenuItem>
+                      {types.map((type) => (<MenuItem key={type} value={type}>{type}</MenuItem>))}
                     </Select>
                     : undefined
                   }
@@ -215,7 +217,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
             <TableRow>
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                colSpan={displayCol.length + 1}
+                colSpan={showDisplayCol.length + 1}
                 count={filterData.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
@@ -229,7 +231,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
           <TableHead>
             <TableRow>
               {/*(tableAttributes.length !== 0) ? tableAttributes.map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>*/}
-              {(typeof filterFirstElement !== 'undefined') ? Object.keys(filterFirstElement).map((column) => (displayCol.includes(column)) ?
+              {(typeof filterFirstElement !== 'undefined') ? Object.keys(filterFirstElement).map((column) => (showDisplayCol.includes(column)) ?
                 (<TableCell key={column}>{column}</TableCell>) : undefined)
                 : <TableCell>No Data</TableCell>
               }
@@ -241,7 +243,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
             {(rowsPerPage > 0
               ? filterData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               : filterData
-            ).map((row) => (<DragTableRow key={row.unique_id} draggable={draggable} query={query} data={row} allQueryData={data} displayCol={displayCol} actionsCol={actionsCol} actionsFunc={[() => handleOpenEdit(row), (() => undefined)]} />)
+            ).map((row) => (<DragTableRow key={row.unique_id} draggable={draggable} query={query} data={row} allQueryData={data} showDisplayCol={showDisplayCol} actionsCol={actionsCol} actionsFunc={[() => handleOpenEdit(row), (() => undefined)]} />)
             )}
 
             {emptyRows > 0 && (
@@ -262,7 +264,8 @@ FlexibleTable.defaultProps = {
   addButton: false,
   filterButton: false,
   draggable: false,
-  displayCol: [],
+  showDisplayCol: [],
+  hideDisplayCol: [],
   actionsCol: [],
   disabledAttributes: []
 }
@@ -274,7 +277,8 @@ FlexibleTable.propTypes = {
   addButton: PropTypes.bool,
   filterButton: PropTypes.bool,
   draggable: PropTypes.bool,
-  displayCol: PropTypes.array,
+  showDisplayCol: PropTypes.array,
+  hideDisplayCol: PropTypes.array,
   actionsCol: PropTypes.array,
   disabledAttributes: PropTypes.array,
 };

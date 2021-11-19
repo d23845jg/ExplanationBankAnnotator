@@ -1,24 +1,22 @@
 import useSWR from 'swr'
 
-import { 
-  getAllDefinitions,
-  getAllGuidelines, 
-  getAllStatements, 
-  postGuidelines, 
-  postStatement 
+import {
+  getAllFacts,
+  postAllFacts,
+  postFact,
 } from '../api/factCuration';
 
 
-export function useGetAllDefinitions () {
+export function useGetAllFacts() {
 
-  const { data, error } = useSWR('DEFINITIONS_CACHE_KEY', async () => await getAllDefinitions(), {
+  const { data, error } = useSWR('DEFINITIONS_CACHE_KEY', async () => await getAllFacts(), {
     revalidateIfStale: true,
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     revalidateOnMount: true,
     refreshInterval: 1000
   });
-  
+
   return {
     data,
     isLoading: !error && !data,
@@ -26,44 +24,10 @@ export function useGetAllDefinitions () {
   };
 }
 
-export function useGetAllGuidelines () {
-
-  const { data, error } = useSWR('GUIDELINES_CACHE_KEY', async () => await getAllGuidelines(), {
-    revalidateIfStale: true,
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    revalidateOnMount: true,
-    refreshInterval: 1000
-  });
-  
-  return {
-    data,
-    isLoading: !error && !data,
-    isError: error
-  };
+export async function postAllExplanationBank(factData) {
+  await postAllFacts({ factData });
 }
 
-export function useGetAllStatements () {
-
-  const { data, error } = useSWR('STATEMENTS_CACHE_KEY', async () => await getAllStatements(), {
-    revalidateIfStale: true,
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    revalidateOnMount: true,
-    refreshInterval: 1000
-  });
-  
-  return {
-    data,
-    isLoading: !error && !data,
-    isError: error
-  };
-}
-
-export async function postAGuidelines (factData) {
-  await postGuidelines({factData});
-}
-
-export async function postAStatement (factData) {
-  await postStatement({factData});
+export async function postAFact(factData) {
+  await postFact({ factData });
 }

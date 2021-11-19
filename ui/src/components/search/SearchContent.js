@@ -110,7 +110,7 @@ function SearchContent() {
         (
           <div className={classes.content}>
             <div className={classes.grid}>
-              <FlexibleTable useGetAll={useGetCancerFacts} query={query} filterBurron={true} draggable={true} displayCol={['Statement', 'Resource', 'Type']} disabledAttributes={[]} />
+              <FlexibleTable useGetAll={useGetCancerFacts} query={query} filterBurron={true} draggable={true} showDisplayCol={['Statement', 'Type']} disabledAttributes={[]} />
             </div>
             <div className={classes.sortableTree}>
               <TreeContent query={query} />

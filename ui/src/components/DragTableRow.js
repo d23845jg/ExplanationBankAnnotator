@@ -28,12 +28,12 @@ const nodeCollect = (connect, monitor) => ({
   // didDrop: !!monitor.didDrop(),
 });
 
-function DragTableRow({ actionsCol, actionsFunc, data, displayCol, draggable, connectDragSource }) {
+function DragTableRow({ actionsCol, actionsFunc, data, showDisplayCol, draggable, connectDragSource }) {
 
   return (
     <TableRow innerRef={instance => (draggable) ? connectDragSource(instance) : instance}>
       {/*Object.values(data).map((value) => (<TableCell key={data.unique_id+value}>{value}</TableCell>))*/}
-      {Object.keys(data).map((key) => (displayCol.includes(key)) ? (<TableCell key={data.unique_id + data[key]}>{data[key]}</TableCell>) : undefined)}
+      {Object.keys(data).map((key) => (showDisplayCol.includes(key)) ? (<TableCell key={data.unique_id + data[key]}>{data[key]}</TableCell>) : undefined)}
 
       {(actionsCol.length !== 0) ?
         <TableCell key={'Action'}>
@@ -63,7 +63,7 @@ DragTableRow.propTypes = {
   data: PropTypes.object.isRequired,
   allQueryData: PropTypes.array.isRequired,
   draggable: PropTypes.bool.isRequired,
-  displayCol: PropTypes.array.isRequired,
+  showDisplayCol: PropTypes.array.isRequired,
   connectDragSource: PropTypes.func.isRequired,
 };
 
