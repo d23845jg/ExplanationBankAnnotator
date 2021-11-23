@@ -4,13 +4,10 @@ from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from transformers import AutoTokenizer, AutoModel
 import torch
-import torch.nn.functional as F
 import csv
 import json
-import math
 import numpy as np
 import heapq
-import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import requests
 
@@ -46,7 +43,7 @@ class RetrieveFact:
             model_output = self.bert(**encoded_input)
         query_embedding = mean_pooling(model_output, encoded_input['attention_mask']).detach().numpy()
 
-        all_facts_with_embeddings = requests.get("http://localhost:8081/facts").json()
+        all_facts_with_embeddings = requests.get("http://fact-curation:8081/facts").json()
 
         filtered_facts_df = []
         filtered_sentence_embeddings = []
@@ -195,7 +192,6 @@ class MyHandler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self._send_headers()
-
 
 def run(server_class=HTTPServer, handler_class=MyHandler, port=8080):
     logging.basicConfig(level=logging.INFO)

@@ -1,11 +1,7 @@
 import csv
 import json
-import gzip
-from os import listdir,path
-import uuid
 import re
 import sqlite3
-import pandas as pd
 import requests
 
 # Explanation Bank -------------------------------------------------------------------------------------------------------------------------------------
@@ -45,7 +41,7 @@ class CurationFact:
         
     def save(self, fact_type, json_content):
 
-        json_content['Embedding'] = requests.get("http://localhost:8080/embedding?statement={0}".format(json_content['Statement'])).json()['Embedding']
+        json_content['Embedding'] = requests.get("http://search-engine:8080/embedding?statement={0}".format(json_content['Statement'])).json()['Embedding']
         
         conn = None
         try:
@@ -90,8 +86,7 @@ curation_fact=CurationFact('./output/facts_sample.db')
 # HTTP Server ------------------------------------------------------------------------------------------------------------------------------------------
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import logging
-from urllib.parse import urlparse,parse_qs
-import cgi
+from urllib.parse import urlparse, parse_qs
 import json
 
 class MyHandler(BaseHTTPRequestHandler):
