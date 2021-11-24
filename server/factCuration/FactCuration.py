@@ -19,11 +19,23 @@ class CurationFact:
             
             curs.execute('SELECT unique_id, json_content FROM facts')
             facts=[json.loads(json_content) for unique_id, json_content in curs.fetchall()]
-
         finally:
             if conn is not None:
                 conn.close()
-            
+        return facts
+
+    def retrieveNegativeSamplingFacts(self, unique_ids, size):
+        facts = None
+        conn = None
+        unique_ids = json.loads(unique_ids.replace('\'', '"'))
+        try:
+            conn = sqlite3.connect(self.db)
+            curs = conn.cursor()
+            curs.execute('SELECT unique_id, json_content FROM facts WHERE unique_id NOT IN {} ORDER BY RANDOM() LIMIT {}'.format(tuple(unique_ids), size))
+            facts=[json.loads(json_content) for unique_id, json_content in curs.fetchall()]
+        finally:
+            if conn is not None:
+                conn.close()
         return facts
     
     def __is_fact_in_db(self, json_content):
@@ -58,7 +70,6 @@ class CurationFact:
         finally:
             if conn is not None:
                 conn.close()
-            
         return 0
     
     def save_all(self, csv_file):
@@ -110,9 +121,13 @@ class MyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         logging.info('GET request,\nPath: %s\nHeaders:\n%s\n', str(self.path), str(self.headers))
         url = urlparse(self.path)
+        fields = parse_qs(url.query)
         if url.path == '/facts':
             self._send_headers()
             self.wfile.write(json.dumps(curation_fact.retrieveAllFacts()).encode('utf-8'))
+        elif url.path == '/negativeSamplingFacts' and 'unique_ids' in fields and 'size' in fields:
+            self._send_headers()
+            self.wfile.write(json.dumps(curation_fact.retrieveNegativeSamplingFacts(fields['unique_ids'][0], fields['size'][0])).encode('utf-8'))
         else:
             self._send_error()
             self.wfile.write('Invalid URL'.encode('utf-8'))
@@ -123,8 +138,7 @@ class MyHandler(BaseHTTPRequestHandler):
 
         url = urlparse(self.path)
         fields = parse_qs(url.query)
-        # verify uuid4
-        pattern = re.compile('^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$')
+
         if url.path == '/save' and 'type' in fields and fields['type'][0] == 'explanationBank':
                 post_data = self.rfile.read(content_length).decode('utf-8')
                 curation_fact.save_all(post_data)
@@ -133,7 +147,7 @@ class MyHandler(BaseHTTPRequestHandler):
                 return
         elif url.path == '/save':
             post_data = json.loads(self.rfile.read(content_length).decode('utf-8'))
-            if 'factData' in post_data and (('unique_id' not in post_data['factData']) or (pattern.match(post_data['factData']['unique_id']) is not None)) and 'Type' in post_data['factData']:
+            if 'factData' in post_data and 'Type' in post_data['factData']:
                 curation_fact.save(post_data['factData']['Type'], post_data['factData'])
                 self._send_headers()
                 self.wfile.write('POST request for {}'.format(self.path).encode('utf-8'))
