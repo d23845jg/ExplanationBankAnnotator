@@ -10,6 +10,7 @@ import SearchContent from './search/SearchContent';
 import {
   useGetAllFacts,
   postAFact,
+  deleteAFact,
 } from '../hooks/factCuration';
 
 
@@ -20,7 +21,7 @@ function TabPanel(props) {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`tabpanel-${index}`}
+      id={`tabpanel-menu-${index}`}
       {...other}
     >
       {value === index && (
@@ -30,7 +31,7 @@ function TabPanel(props) {
       )}
     </div>
   );
-}
+};
 
 function MainContent() {
 
@@ -51,7 +52,7 @@ function MainContent() {
         <AddNewFacts />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <FlexibleTable useGetAll={useGetAllFacts} updateRow={postAFact} hideDisplayCol={['unique_id', 'Embedding']} disabledAttributes={['unique_id', 'Embedding']} addButton={true} filterBurron={true} actionsCol={['edit']} />
+        <FlexibleTable useGetAll={useGetAllFacts} updateRow={postAFact} deleteRow={deleteAFact} hideDisplayCol={['_id', 'Embedding']} disabledAttributes={['_id', 'Embedding']} addButton={true} filterBurron={true} actionsCol={['edit', 'delete']} />
       </TabPanel>
     </div>
   );

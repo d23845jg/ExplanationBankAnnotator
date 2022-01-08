@@ -35,7 +35,7 @@ function Header() {
         <Toolbar>
           <Typography className={classes.title} variant='h6' noWrap>
             <Link href="/" className={classes.link}>
-              Cancer Explanation Bank Project
+              Explanation Bank Annotator Project
             </Link>
           </Typography>
         </Toolbar>

@@ -4,6 +4,7 @@ import {
   getAllFacts,
   postAllFacts,
   postFact,
+  deleteFact,
 } from '../api/factCuration';
 
 
@@ -14,7 +15,7 @@ export function useGetAllFacts() {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     revalidateOnMount: true,
-    refreshInterval: 1000
+    refreshInterval: 5000
   });
 
   return {
@@ -30,4 +31,8 @@ export async function postAllExplanationBank(factData) {
 
 export async function postAFact(factData) {
   await postFact({ factData });
+}
+
+export async function deleteAFact(id) {
+  await deleteFact({ id });
 }

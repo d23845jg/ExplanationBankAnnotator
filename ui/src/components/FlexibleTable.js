@@ -16,6 +16,7 @@ import TablePagination from '@material-ui/core/TablePagination';
 import TextField from '@material-ui/core/TextField';
 import Paper from '@material-ui/core/Paper';
 import Select from '@material-ui/core/Select';
+import Snackbar from '@material-ui/core/Snackbar';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 
 import AddIcon from '@material-ui/icons/Add';
@@ -113,7 +114,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, draggable, showDisplayCol, hideDisplayCol, actionsCol, disabledAttributes }) {
+function FlexibleTable({ useGetAll, query, updateRow, deleteRow, addButton, filterBurron, draggable, showDisplayCol, hideDisplayCol, actionsCol, disabledAttributes }) {
 
   const classes = useStyles();
 
@@ -122,6 +123,8 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selFilter, setSelFilter] = useState('all');
   const [textFilter, setTextFilter] = useState('');
+  const [deleteError, setDeleteError] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   const {
     data,
@@ -161,15 +164,39 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
 
   // TODO: this approach for the add item has to be changed
   const bb = Object.keys(filterFirstElement).reduce((a, v) => ({ ...a, [v]: '' }), {})
-  delete bb['unique_id'];
+  delete bb['_id'];
   delete bb['Embedding'];
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filterData.length) : 0;
 
+  async function handleDeleteFact(id) {
+    try { await deleteRow(id); setDeleteSuccess(true); }
+    catch (err) { setDeleteError(true); }
+  };
+
+  function handleAlertClose(event, reason) {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setDeleteError(false);
+    setDeleteSuccess(false);
+  };
+
+  const FactsAlert = ({ value, handleAlertClose, type, message }) => (
+    < Snackbar open={value} autoHideDuration={5000} onClose={handleAlertClose} >
+      <Alert onClose={handleAlertClose} severity={type} >
+        {message}
+      </Alert>
+    </Snackbar >
+  );
+
   return (
     <div>
       <EditModal disabledAttributes={disabledAttributes} openModal={openEdit} setOpenModal={setOpenEdit} handleSubmitModal={updateRow} handleCloseModal={handleCloseEdit} />
+      
+      <FactsAlert value={deleteError} handleAlertClose={handleAlertClose} type={"error"} message={"Fact could not be deleted"} />
+      <FactsAlert value={deleteSuccess} handleAlertClose={handleAlertClose} type={"success"} message={"Fact was deleted successfully"} />
 
       <TableContainer className={classes.table} component={Paper}>
         <Table stickyHeader>
@@ -231,11 +258,11 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
           <TableHead>
             <TableRow>
               {/*(tableAttributes.length !== 0) ? tableAttributes.map((column) => (<TableCell key={column}>{column}</TableCell>)): <TableCell>No Data</TableCell>*/}
-              {(typeof filterFirstElement !== 'undefined') ? Object.keys(filterFirstElement).map((column) => (showDisplayCol.includes(column)) ?
+              {(filterFirstElement.length !== 0) ? Object.keys(filterFirstElement).map((column) => (showDisplayCol.includes(column)) ?
                 (<TableCell key={column}>{column}</TableCell>) : undefined)
                 : <TableCell>No Data</TableCell>
               }
-              {(actionsCol.length !== 0) ? <TableCell key={'Action'}>{'Action'}</TableCell> : undefined /* Adding action column if needed */}
+              {(actionsCol.length !== 0 & filterFirstElement.length !== 0) ? <TableCell key={'Action'}>{'Action'}</TableCell> : undefined /* Adding action column if needed */}
             </TableRow>
           </TableHead>
 
@@ -243,7 +270,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
             {(rowsPerPage > 0
               ? filterData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               : filterData
-            ).map((row) => (<DragTableRow key={row.unique_id} draggable={draggable} query={query} data={row} allQueryData={data} showDisplayCol={showDisplayCol} actionsCol={actionsCol} actionsFunc={[() => handleOpenEdit(row), (() => undefined)]} />)
+            ).map((row) => (<DragTableRow key={row._id} draggable={draggable} query={query} data={row} allQueryData={data} showDisplayCol={showDisplayCol} actionsCol={actionsCol} actionsFunc={[() => handleOpenEdit(row), () => handleDeleteFact(row._id)]} />)
             )}
 
             {emptyRows > 0 && (
@@ -261,6 +288,7 @@ function FlexibleTable({ useGetAll, query, updateRow, addButton, filterBurron, d
 FlexibleTable.defaultProps = {
   query: '',
   updateRow: () => undefined,
+  deleteRow: () => undefined,
   addButton: false,
   filterButton: false,
   draggable: false,
@@ -274,6 +302,7 @@ FlexibleTable.propTypes = {
   useGetAll: PropTypes.func.isRequired,
   query: PropTypes.string,
   updateRow: PropTypes.func,
+  deleteRow: PropTypes.func,
   addButton: PropTypes.bool,
   filterButton: PropTypes.bool,
   draggable: PropTypes.bool,

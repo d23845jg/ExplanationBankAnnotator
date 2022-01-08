@@ -7,8 +7,10 @@ import {
 import PropTypes from 'prop-types';
 
 import Button from '@material-ui/core/Button';
+import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import Snackbar from '@material-ui/core/Snackbar';
+import TextField from '@material-ui/core/TextField';
 import { makeStyles } from '@material-ui/core/styles';
 
 import AddCircleIcon from '@material-ui/icons/AddCircle';
@@ -23,30 +25,44 @@ import { nodeTypeData } from '../../DragTableRow';
 import AddChildTreeModal from './AddChildTreeModal';
 import { saveTreeData } from '../../../hooks/tree';
 
+
 const useStyles = makeStyles((theme) => ({
+  treeArea: {
+    paddingTop: '1rem',
+  },
   sortableTree: {
-    height: '75vh',
+    height: '60vh',
     paddingTop: theme.spacing(8),
     paddingLeft: theme.spacing(2)
     // isVirtualized={false}
   },
-  buttons: {
+  sortableTreeTitle: {
+    width: "55vh",
+    overflow: 'scroll',
+  },
+  treeButtons: {
     float: 'right',
+  },
+  textInput: {
+    paddingRight: '1rem',
+    paddingBottom: '1rem',
   },
 }));
 
-function TreeContent({ query }) {
+function TreeContent({ treeData, setTreeData, query, addQA }) {
 
   const classes = useStyles();
 
   const [configModal, setConfigModal] = useState({ openModal: false, nodePath: [] });
-  const [treeData, setTreeData] = useState([]);
   const [send, setSend] = useState(false);
-  const [error, setError] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [savesuccess, setSaveSuccess] = useState(false);
+
+  const [question, setQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
 
   /*function getNodeKey({node}) {
-    return node.data.unique_id;
+    return node.data._id;
   }*/
 
   function getNodeKey({ treeIndex }) {
@@ -91,7 +107,7 @@ function TreeContent({ query }) {
           title: query,
           expanded: true,
           query,
-          data: { unique_id: 0, Statement: query },
+          data: { _id: 0, Statement: query },
           allQueryData: [],
         }
       }).treeData
@@ -104,8 +120,19 @@ function TreeContent({ query }) {
 
   async function handleSaveTree() {
     setSend(true);
-    try { await saveTreeData(treeData); setSuccess(true); }
-    catch (err) { setError(true); }
+    try {
+      var data = { 'proof': treeData }
+      if (addQA) {
+        data['question'] = question
+        data['answer'] = answer
+      }
+      await saveTreeData(data);
+      setSaveSuccess(true);
+      setTreeData([]);
+      setQuestion('');
+      setAnswer('');
+    }
+    catch (err) { setSaveError(true); }
     setSend(false);
   };
 
@@ -113,8 +140,8 @@ function TreeContent({ query }) {
     if (reason === 'clickaway') {
       return;
     }
-    setError(false);
-    setSuccess(false);
+    setSaveError(false);
+    setSaveSuccess(false);
   };
 
   const TreeAlert = ({ value, handleAlertClose, type, message }) => (
@@ -123,53 +150,90 @@ function TreeContent({ query }) {
         {message}
       </Alert>
     </Snackbar >
-  )
+  );
 
+  function createTextField({ title, value, setValue }) {
+    return (
+      <TextField
+        className={classes.textInput}
+        label={title}
+        variant="outlined"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+      />
+    );
+  };
 
   return (
     <div>
-      <div className={classes.buttons}>
-        <Button variant="outlined" color="primary" endIcon={<AddIcon />} onClick={handleInsertQuery}>
-          {'Insert query'}
-        </Button>
+      {
+        (addQA) ?
+          (
+            <div>
+              {createTextField({ title: 'Question', value: question, setValue: setQuestion })}
+              {createTextField({ title: 'Answer', value: answer, setValue: setAnswer })}
+              <Divider />
+            </div>
+          )
+          : <div />
+      }
 
-        <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<ClearIcon />} onClick={handleClearTree}>
-          {'Clear Tree'}
-        </Button>
+      <div className={classes.treeArea}>
+        <div className={classes.treeButtons}>
+          <Button variant="outlined" color="primary" endIcon={<AddIcon />} onClick={handleInsertQuery}>
+            {'Insert query'}
+          </Button>
 
-        <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<SaveIcon />} onClick={handleSaveTree} disabled={send}>
-          {send ? 'Saving' : 'Save'}
-        </Button>
-      </div>
+          <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<ClearIcon />} onClick={handleClearTree}>
+            {'Clear'}
+          </Button>
 
-      <div className={classes.sortableTree}>
-        <TreeAlert value={error} handleAlertClose={handleAlertClose} type={"error"} message={"Tree could not be saved"} />
-        <TreeAlert value={success} handleAlertClose={handleAlertClose} type={"success"} message={"Tree was saved successfully"} />
-        <AddChildTreeModal openModal={configModal.openModal} handleSubmitModal={handleSubmitModal} handleCloseModal={handleCloseModal} />
-        <SortableTree
-          treeData={treeData}
-          dndType={nodeTypeData}
-          onChange={treeData => setTreeData(treeData)}
-          generateNodeProps={({ node, path }) => ({
-            buttons:
-              [
-                <IconButton color="default" onClick={() => handleOpenModal(path)}>
-                  <AddCircleIcon />
-                </IconButton>,
-                // The query should not have the delete button
-                (node.data.unique_id === '0') ? [] :
-                  <IconButton color="default" onClick={() => setTreeData(treeData => removeNodeAtPath({ treeData, path, getNodeKey }))}>
-                    <DeleteIcon />
-                  </IconButton>
-              ],
-          })}
-        />
-      </div>
+          <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<SaveIcon />} onClick={handleSaveTree} disabled={send}>
+            {send ? 'Saving' : 'Save'}
+          </Button>
+        </div>
+
+        <div className={classes.sortableTree}>
+          <TreeAlert value={saveError} handleAlertClose={handleAlertClose} type={"error"} message={"Tree could not be saved"} />
+          <TreeAlert value={savesuccess} handleAlertClose={handleAlertClose} type={"success"} message={"Tree was saved successfully"} />
+          <AddChildTreeModal openModal={configModal.openModal} handleSubmitModal={handleSubmitModal} handleCloseModal={handleCloseModal} />
+          <SortableTree
+            treeData={treeData}
+            dndType={nodeTypeData}
+            onChange={treeData => setTreeData(treeData)}
+            generateNodeProps={({ node, path }) => ({
+              title: (
+                <div className={classes.sortableTreeTitle}>
+                  {node.title}
+                </div>
+              ),
+              buttons:
+                [
+                  <IconButton color="default" onClick={() => handleOpenModal(path)}>
+                    <AddCircleIcon />
+                  </IconButton>,
+                  // The query should not have the delete button
+                  (node.data._id === '0') ? [] :
+                    <IconButton color="default" onClick={() => setTreeData(treeData => removeNodeAtPath({ treeData, path, getNodeKey }))}>
+                      <DeleteIcon />
+                    </IconButton>
+                ],
+            })}
+          />
+        </div>
+      </div >
     </div>
   );
 };
 
+TreeContent.defaultProps = {
+  addQA: false,
+};
+
 TreeContent.prototype = {
+  treeData: PropTypes.array.isRequired,
+  setTreeData: PropTypes.func.isRequired,
+  addQA: PropTypes.bool,
   query: PropTypes.string.isRequired,
 };
 

@@ -8,8 +8,8 @@ import { alpha, makeStyles } from '@material-ui/core/styles';
 import SearchIcon from '@material-ui/icons/Search';
 
 import { useCancerQuery } from '../../hooks/cancer';
-import TreeContent from './tree/TreeContent';
 import FlexibleTable from '../FlexibleTable';
+import AnnotationModel from './AnnotationModel';
 
 const useStyles = makeStyles((theme) => ({
   page: {
@@ -49,11 +49,11 @@ const useStyles = makeStyles((theme) => ({
   },
   grid: {
     float: 'left',
-    width: "50%",
+    width: "45%",
   },
   sortableTree: {
     float: 'right',
-    width: '50%',
+    width: '55%',
   }
 }));
 
@@ -113,7 +113,7 @@ function SearchContent() {
               <FlexibleTable useGetAll={useGetCancerFacts} query={query} filterBurron={true} draggable={true} showDisplayCol={['Statement', 'Type']} disabledAttributes={[]} />
             </div>
             <div className={classes.sortableTree}>
-              <TreeContent query={query} />
+              <AnnotationModel query={query} />
             </div>
           </div>
         )

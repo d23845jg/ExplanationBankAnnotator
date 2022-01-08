@@ -44,7 +44,7 @@ function AddChildTreeModal({openModal, handleSubmitModal, handleCloseModal}) {
 
   // getModalStyle is not a pure function, we roll the style only on the first render
   const [modalStyle] = useState(getModalStyle);
-  const[fact, setFact] = useState({unique_id: -1, Statement: '', Resource: ''});
+  const[fact, setFact] = useState({_id: -1, Statement: '', Resource: ''});
 
   const body = (
     <div style={modalStyle} className={classes.paper}>

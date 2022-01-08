@@ -11,10 +11,12 @@ export const postAllFacts = ({ factData }) =>
       headers: {
         'Content-Type': 'multipart/form-data'
       }
-    })
-    .then(response => response.data);
+    });
 
 export const postFact = ({ factData }) =>
   axios
-    .post('http://localhost:8081/save', { factData })
-    .then(response => response.data);
+    .post('http://localhost:8081/save', { factData });
+
+export const deleteFact = ({ id }) =>
+  axios
+    .delete(`http://localhost:8081/delete?id=${id}`);
