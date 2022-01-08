@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { makeStyles, styled } from '@material-ui/core/styles';
 
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
@@ -72,8 +73,8 @@ function AddNewFacts() {
 
       <label htmlFor="outlined-button-file">
         <Input accept=".csv" id="outlined-button-file" type="file" onChange={uploadFile} />
-        <Button variant="outlined" endIcon={<CloudUploadIcon />} component="span" disabled={send}>
-          {send ? 'Uploading File' : 'Upload File'}
+        <Button variant="outlined" endIcon={send ? <CircularProgress size='1rem'/> : <CloudUploadIcon />} component="span" disabled={send}>
+          {send ? 'Uploading File...' : 'Upload File'}
         </Button>
       </label>
     </div>

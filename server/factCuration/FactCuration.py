@@ -49,7 +49,8 @@ class CurationFact:
                 json_content[header[i]] = row[i]
             json_content['Embedding'] = requests.get("http://search-engine:8080/embedding?statement={0}".format(json_content['Statement'])).json()['Embedding']
             # json_content['Embedding'] = requests.get("http://localhost:8080/embedding?statement={0}".format(json_content['Statement'])).json()['Embedding']
-            json_content['_id'] = str(uuid.uuid4())
+            # json_content['_id'] = str(uuid.uuid4())
+            json_content['_id'] = json_content['Statement']
             self.saveByID(json_content)
 
 curation_fact=CurationFact()

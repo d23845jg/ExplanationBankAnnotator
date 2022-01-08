@@ -1,6 +1,6 @@
 {
-  "name": "cancer-project-material-ui",
-  "version": "0.1.0",
+  "name": "explanation-bank-project",
+  "version": "1.0.2",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.11.4",
