@@ -4,8 +4,15 @@ services:
     build: ./ui
     volumes:
       - ./ui:/app/web
+    # Need to validate
+    # https://docs.docker.com/compose/compose-file/compose-file-v3/#dns
+    # dns: 52.142.187.202
+    # dns_search: generic.explanationbank.com
+    # extra_hosts:
+    #   - "explanationbank:52.142.187.202"
     ports:
       - 3000:3000
+      # - 3000:80
     depends_on:
       - searchEngine
       - factCuration
@@ -15,9 +22,29 @@ services:
       - ./server/searchEngine:/app/searchEngine
     ports:
       - 8080:8080
+    # Follow NVIDIA's installation guide (https://github.com/NVIDIA/nvidia-docker) to install 
+    # NVIDIA Container Toolkit to run GPU accelerated Docker containers
+    # image: nvidia/cuda:10.2-base
+    # command: nvidia-smi
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #       - driver: nvidia
+    #         count: 1
+    #         # device_ids: ['0']
+    #         capabilities: [gpu]
   fact-curation:
     build: ./server/factCuration
     volumes:
       - ./server/factCuration:/app/factCuration
     ports:
       - 8081:8081
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo
+    volumes:
+      - ./server/factCuration/mongodb:/data/db
+    ports:
+      - 27017:27017

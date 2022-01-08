@@ -24,8 +24,7 @@ def mean_pooling(model_output, attention_mask):
 # Retrieve fact based on BioBERT -----------------------------------------------------------------------------------------------------------------------
 class RetrieveFact:
 
-    def __init__(self):
-        # Load AutoModel from huggingface model repository
+    def __init__(self, pre_trained=False):
         self.tokenizer = AutoTokenizer.from_pretrained("dmis-lab/biobert-v1.1")
         self.bert = AutoModel.from_pretrained("dmis-lab/biobert-v1.1")
         print('BERT model loaded')
@@ -37,6 +36,7 @@ class RetrieveFact:
         query_embedding = mean_pooling(model_output, encoded_input['attention_mask']).detach().numpy()
 
         all_facts_with_embeddings = requests.get("http://fact-curation:8081/facts").json()
+        # all_facts_with_embeddings = requests.get("http://localhost:8081/facts").json()
 
         filtered_facts_df = []
         filtered_sentence_embeddings = []
@@ -45,7 +45,6 @@ class RetrieveFact:
             filtered_facts_df.append(fact)
             filtered_sentence_embeddings.append(embedding[0])
         filtered_sentence_embeddings = np.array(filtered_sentence_embeddings)
-        print('sentence embedding get,', filtered_sentence_embeddings.shape)
 
         cos_sim = cosine_similarity(query_embedding, filtered_sentence_embeddings)[0].tolist()
 
@@ -55,7 +54,7 @@ class RetrieveFact:
         return [
             {
                 'cosine_similarity': cos_sim[i],
-                'unique_id': filtered_facts_df[i]['unique_id'],
+                '_id': filtered_facts_df[i]['_id'],
                 # self.breastcancer_facts_df.statement[i],
                 'Statement': filtered_facts_df[i]['Statement'],
                 'Resource': '',  # self.breastcancer_facts_df.resource[i],
@@ -80,7 +79,7 @@ class RetrieveFact:
             'Embedding': query_embedding
         }
 
-retrieve_fact = RetrieveFact()
+retrieve_fact= RetrieveFact()
 
 # Pre-Process Tree -------------------------------------------------------------------------------------------------------------------------------------
 class ProcessTree():
@@ -91,8 +90,9 @@ class ProcessTree():
     def __generateNegativeSamples(self, all_tree_data, query, data):
         if query not in self.__negative_samples:
             # Add random facts to include negative sampling
-            unique_ids = [ node['unique_id'] for node in all_tree_data]
-            random_negative_sampling_facts = requests.get("http://fact-curation:8081/negativeSamplingFacts?unique_ids={0}&size=10".format(unique_ids)).json()
+            ids = [ node['_id'] for node in all_tree_data]
+            random_negative_sampling_facts = requests.get("http://fact-curation:8081/negativeSamplingFacts?ids={0}&size=10".format(ids)).json()
+            # random_negative_sampling_facts = requests.get("http://localhost:8081/negativeSamplingFacts?ids={0}&size=10".format(ids)).json()
             self.__negative_samples[query] = all_tree_data + random_negative_sampling_facts
         self.__negative_samples[query].remove(data)
 
@@ -106,8 +106,8 @@ class ProcessTree():
 
     def __getAllPositiveSamples(self, all_tree_data, csv_data):
         for node in all_tree_data:
-            # unique_id == -1 (manually created statements) and 0 (user query)
-            if node['data']['unique_id'] not in [-1, 0]:
+            # id == -1 (manually created statements) and 0 (user query)
+            if node['data']['_id'] not in [-1, 0]:
                 csv_data.append([node['query'], node['data']['Statement'], 1])
                 self.__generateNegativeSamples(node['allQueryData'], node['query'], node['data'])
             if 'children' in node:
@@ -116,17 +116,23 @@ class ProcessTree():
 
     def __generateCSVFile(self, fileId, annotation_tree_data):
         self.__negative_samples = {}
-        csv_data_positive_samples = self.__getAllPositiveSamples(annotation_tree_data, [])
+        csv_data_positive_samples = self.__getAllPositiveSamples(annotation_tree_data['proof'], [])
         csv_data_negative_samples = self.__getAllNegativeSamples()
-
         with open(self.__path+'csv/'+fileId+'.csv', 'w+') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["query", "statement", "label"])
-
             writer.writerows(csv_data_positive_samples)
             writer.writerows(csv_data_negative_samples)
     
+    def __formatTreeJSON(self, annotation_tree_data):
+        for node in annotation_tree_data:
+            del node['title']
+            del node['expanded']
+            if 'children' in node:
+                self.__formatTreeJSON(node['children'])
+
     def __generateJSONTreeFile(self, fileId, annotation_tree_data):
+        self.__formatTreeJSON(annotation_tree_data['proof'])
         with open(self.__path+'json/'+fileId+'.json', 'w+') as file:
             json.dump(annotation_tree_data, file)
 
@@ -200,7 +206,6 @@ def run(server_class=HTTPServer, handler_class=MyHandler, port=8080):
         pass
     httpd.server_close()
     logging.info('Stopping httpd...\n')
-
 
 if __name__ == '__main__':
     from sys import argv

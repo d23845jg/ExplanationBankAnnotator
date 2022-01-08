@@ -1,76 +1,39 @@
 import csv
 import json
-import re
-import sqlite3
 import requests
+import pymongo
+import uuid
+import logging
 
 # Explanation Bank -------------------------------------------------------------------------------------------------------------------------------------
 class CurationFact:
     
-    def __init__(self,fp):
-        self.db = fp
+    def __init__(self):
+        conn_str = "mongodb://mongo:27017/db"
+        # conn_str = "mongodb://localhost:27017"
+        try:
+            client = pymongo.MongoClient(conn_str)
+            logging.info("Connected to MongoDB")
+            self.db = client['facts']
+        except Exception:
+            logging.error("Unable to connect to MongoDB")
         
     def retrieveAllFacts(self):
-        facts = None
-        conn = None
-        try:
-            conn = sqlite3.connect(self.db)
-            curs = conn.cursor()
-            
-            curs.execute('SELECT unique_id, json_content FROM facts')
-            facts=[json.loads(json_content) for unique_id, json_content in curs.fetchall()]
-        finally:
-            if conn is not None:
-                conn.close()
+        facts = list(self.db.facts.find({}))
         return facts
 
-    def retrieveNegativeSamplingFacts(self, unique_ids, size):
-        facts = None
-        conn = None
-        unique_ids = json.loads(unique_ids.replace('\'', '"'))
-        try:
-            conn = sqlite3.connect(self.db)
-            curs = conn.cursor()
-            curs.execute('SELECT unique_id, json_content FROM facts WHERE unique_id NOT IN {} ORDER BY RANDOM() LIMIT {}'.format(tuple(unique_ids), size))
-            facts=[json.loads(json_content) for unique_id, json_content in curs.fetchall()]
-        finally:
-            if conn is not None:
-                conn.close()
+    def retrieveNegativeSamplingFacts(self, ids, size):
+        ids = json.loads(ids.replace('\'', '"'))
+        facts = list(self.db.facts.aggregate([{ '$match': { '_id': { '$nin': ids } } }, { '$sample': { 'size': int(size) } }]))
         return facts
-    
-    def __is_fact_in_db(self, json_content):
-        conn = None
-        try:
-            conn = sqlite3.connect(self.db)
-            curs = conn.cursor()
-            
-            curs.execute('SELECT unique_id FROM facts WHERE unique_id=?',(json_content['Statement'],))
-            unique_id = curs.fetchone()
-            return unique_id[0] if unique_id != None else None
-        finally:
-            if conn is not None:
-                conn.close()
+
+    def deleteFactByID(self, id):
+        self.db.facts.delete_one({ '_id': id })
         
-    def save(self, fact_type, json_content):
-
+    def saveByID(self, json_content):
         json_content['Embedding'] = requests.get("http://search-engine:8080/embedding?statement={0}".format(json_content['Statement'])).json()['Embedding']
-        
-        conn = None
-        try:
-            conn = sqlite3.connect(self.db)
-            curs = conn.cursor()
-            
-            if 'unique_id' not in json_content:
-                json_content['unique_id'] = json_content['Statement'] + ':' + json_content['Type']
-                curs.execute('INSERT INTO facts VALUES (?,?,?)',(json_content['unique_id'], json.dumps(json_content), fact_type))
-                conn.commit()
-            else:
-                curs.execute('UPDATE facts SET json_content=? WHERE unique_id=? AND type=?',(json.dumps(json_content), json_content['unique_id'], fact_type))
-                conn.commit()
-        finally:
-            if conn is not None:
-                conn.close()
-        return 0
+        # json_content['Embedding'] = requests.get("http://localhost:8080/embedding?statement={0}".format(json_content['Statement'])).json()['Embedding']
+        self.db.facts.update_one({ '_id': json_content['_id'] }, { '$set': json_content }, upsert=True)
     
     def save_all(self, csv_file):
         lines = csv_file.splitlines()
@@ -84,19 +47,16 @@ class CurationFact:
             json_content = {}
             for i in range(len(header)):
                 json_content[header[i]] = row[i]
-            fact_type = json_content['Type']
-            unique_id = self.__is_fact_in_db(json_content)
-            print(unique_id)
-            if unique_id != None:
-                json_content['unique_id'] = unique_id
-            self.save(fact_type, json_content)
+            json_content['Embedding'] = requests.get("http://search-engine:8080/embedding?statement={0}".format(json_content['Statement'])).json()['Embedding']
+            # json_content['Embedding'] = requests.get("http://localhost:8080/embedding?statement={0}".format(json_content['Statement'])).json()['Embedding']
+            json_content['_id'] = str(uuid.uuid4())
+            self.saveByID(json_content)
 
-curation_fact=CurationFact('./output/facts_sample.db')
+curation_fact=CurationFact()
 
 
 # HTTP Server ------------------------------------------------------------------------------------------------------------------------------------------
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import logging
 from urllib.parse import urlparse, parse_qs
 import json
 
@@ -105,7 +65,7 @@ class MyHandler(BaseHTTPRequestHandler):
     def _send_headers(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
@@ -113,7 +73,7 @@ class MyHandler(BaseHTTPRequestHandler):
     def _send_error(self):
         self.send_response(400)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
@@ -125,9 +85,9 @@ class MyHandler(BaseHTTPRequestHandler):
         if url.path == '/facts':
             self._send_headers()
             self.wfile.write(json.dumps(curation_fact.retrieveAllFacts()).encode('utf-8'))
-        elif url.path == '/negativeSamplingFacts' and 'unique_ids' in fields and 'size' in fields:
+        elif url.path == '/negativeSamplingFacts' and 'ids' in fields and 'size' in fields:
             self._send_headers()
-            self.wfile.write(json.dumps(curation_fact.retrieveNegativeSamplingFacts(fields['unique_ids'][0], fields['size'][0])).encode('utf-8'))
+            self.wfile.write(json.dumps(curation_fact.retrieveNegativeSamplingFacts(fields['ids'][0], fields['size'][0])).encode('utf-8'))
         else:
             self._send_error()
             self.wfile.write('Invalid URL'.encode('utf-8'))
@@ -148,17 +108,31 @@ class MyHandler(BaseHTTPRequestHandler):
         elif url.path == '/save':
             post_data = json.loads(self.rfile.read(content_length).decode('utf-8'))
             if 'factData' in post_data and 'Type' in post_data['factData']:
-                curation_fact.save(post_data['factData']['Type'], post_data['factData'])
+                curation_fact.saveByID(post_data['factData'])
                 self._send_headers()
                 self.wfile.write('POST request for {}'.format(self.path).encode('utf-8'))
                 return
         self._send_error()
         self.wfile.write('Invalid URL'.encode('utf-8'))
+    
+    def do_DELETE(self):
+        logging.info('DELETE request,\nPath: %s\nHeaders:\n%s\n', str(self.path), str(self.headers))
+
+        url = urlparse(self.path)
+        fields = parse_qs(url.query)
+
+        if url.path == '/delete' and 'id' in fields:
+            curation_fact.deleteFactByID(fields['id'][0])
+            self._send_headers()
+            self.wfile.write('DELETE request for {}'.format(self.path).encode('utf-8'))
+        else:
+            self._send_error()
+            self.wfile.write('Invalid URL'.encode('utf-8'))
 
     def do_OPTIONS(self):
         self._send_headers()
 
-def run(server_class = HTTPServer, handler_class = MyHandler, port = 8080):
+def run(server_class = HTTPServer, handler_class = MyHandler, port = 8081):
     logging.basicConfig(level = logging.INFO)
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)

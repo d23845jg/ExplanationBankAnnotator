@@ -1,6 +1,6 @@
 FROM python:3.8-slim
 WORKDIR /app/searchEngine
-COPY . .
+COPY . /app/searchEngine
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 EXPOSE 8080
