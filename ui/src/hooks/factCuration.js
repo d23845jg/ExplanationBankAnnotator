@@ -15,7 +15,7 @@ export function useGetAllFacts() {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     revalidateOnMount: true,
-    refreshInterval: 5000
+    refreshInterval: 60000
   });
 
   return {

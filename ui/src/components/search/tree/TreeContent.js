@@ -34,7 +34,6 @@ const useStyles = makeStyles((theme) => ({
     height: '60vh',
     paddingTop: theme.spacing(8),
     paddingLeft: theme.spacing(2)
-    // isVirtualized={false}
   },
   sortableTreeTitle: {
     width: "55vh",

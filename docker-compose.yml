@@ -1,21 +1,21 @@
 version: '3'
 services:
-  web:
-    build: ./ui
+  mongo:
+    image: mongo
     volumes:
-      - ./ui:/app/web
-    # Need to validate
-    # https://docs.docker.com/compose/compose-file/compose-file-v3/#dns
-    # dns: 52.142.187.202
-    # dns_search: generic.explanationbank.com
-    # extra_hosts:
-    #   - "explanationbank:52.142.187.202"
+      - ./server/factCuration/mongodb:/data/db
     ports:
-      - 3000:3000
-      # - 3000:80
+      - 27017:27017
+
+  fact-curation:
+    build: ./server/factCuration
+    volumes:
+      - ./server/factCuration:/app/factCuration
+    ports:
+      - 8081:8081
     depends_on:
-      - searchEngine
-      - factCuration
+      - mongo
+
   search-engine:
     build: ./server/searchEngine
     volumes:
@@ -34,17 +34,19 @@ services:
     #         count: 1
     #         # device_ids: ['0']
     #         capabilities: [gpu]
-  fact-curation:
-    build: ./server/factCuration
+
+  web:
+    build: ./ui
     volumes:
-      - ./server/factCuration:/app/factCuration
+      - ./ui:/app/web
+    # Need to validate
+    # https://docs.docker.com/compose/compose-file/compose-file-v3/#dns
+    # dns: 52.142.187.202
+    # dns_search: generic.explanationbank.com
+    # extra_hosts:
+    #   - "explanationbank:52.142.187.202"
     ports:
-      - 8081:8081
+      - 3000:3000
     depends_on:
-      - mongo
-  mongo:
-    image: mongo
-    volumes:
-      - ./server/factCuration/mongodb:/data/db
-    ports:
-      - 27017:27017
+      - searchEngine
+      - factCuration

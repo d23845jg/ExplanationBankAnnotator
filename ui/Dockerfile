@@ -16,8 +16,7 @@ RUN npm run build
 
 # Nginx web server
 FROM nginx:1.21 as prod
-# COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/web/build /usr/share/nginx/html
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
 # EXPOSE 80
 # CMD ["nginx", "-g", "daemon off;"]
