@@ -9,7 +9,7 @@
 # Build stage
 FROM node:16 as build
 WORKDIR /app/web
-COPY package*.json ./
+COPY package*.json /app/web
 RUN npm ci --production
 COPY . /app/web
 RUN npm run build
@@ -18,5 +18,3 @@ RUN npm run build
 FROM nginx:1.21 as prod
 COPY --from=build /app/web/build /usr/share/nginx/html
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
-# EXPOSE 80
-# CMD ["nginx", "-g", "daemon off;"]
