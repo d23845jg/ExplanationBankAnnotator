@@ -7,6 +7,7 @@ import {
 import PropTypes from 'prop-types';
 
 import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -15,6 +16,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AddIcon from '@material-ui/icons/Add';
+import AutorenewIcon from '@material-ui/icons/Autorenew';
 import ClearIcon from '@material-ui/icons/Clear';
 import DeleteIcon from '@material-ui/icons/Delete';
 import SaveIcon from '@material-ui/icons/Save';
@@ -23,6 +25,7 @@ import Alert from '@material-ui/lab/Alert';
 
 import { nodeTypeData } from '../../DragTableRow';
 import AddChildTreeModal from './AddChildTreeModal';
+import { getTrainSearchSystem } from '../../../hooks/cancer';
 import { saveTreeData } from '../../../hooks/tree';
 
 
@@ -39,9 +42,6 @@ const useStyles = makeStyles((theme) => ({
     width: "55vh",
     overflow: 'scroll',
   },
-  treeButtons: {
-    float: 'right',
-  },
   textInput: {
     paddingRight: '1rem',
     paddingBottom: '1rem',
@@ -53,9 +53,14 @@ function TreeContent({ treeData, setTreeData, query, addQA }) {
   const classes = useStyles();
 
   const [configModal, setConfigModal] = useState({ openModal: false, nodePath: [] });
-  const [send, setSend] = useState(false);
+
+  const [trainSearchSystem, setTrainSearchSystem] = useState(false);
+  const [trainSearchSystemError, setTrainSearchSystemError] = useState(false);
+  const [trainSearchSystemSuccess, setTrainSearchSystemSuccess] = useState(false);
+
+  const [saveTree, setSaveTree] = useState(false);
   const [saveError, setSaveError] = useState(false);
-  const [savesuccess, setSaveSuccess] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -95,6 +100,16 @@ function TreeContent({ treeData, setTreeData, query, addQA }) {
     setConfigModal({ openModal: false, nodePath: [] });
   };
 
+  async function handleTrainSearchSystem() {
+    setTrainSearchSystem(true);
+    try {
+      await getTrainSearchSystem();
+      setTrainSearchSystemSuccess(true);
+    }
+    catch (err) { setTrainSearchSystemError(true); }
+    setTrainSearchSystem(false);
+  };
+
   function handleInsertQuery() {
     setTreeData(treeData =>
       addNodeUnderParent({
@@ -118,7 +133,7 @@ function TreeContent({ treeData, setTreeData, query, addQA }) {
   };
 
   async function handleSaveTree() {
-    setSend(true);
+    setSaveTree(true);
     try {
       var data = { 'proof': treeData }
       if (addQA) {
@@ -132,10 +147,10 @@ function TreeContent({ treeData, setTreeData, query, addQA }) {
       setAnswer('');
     }
     catch (err) { setSaveError(true); }
-    setSend(false);
+    setSaveTree(false);
   };
 
-  function handleAlertClose(event, reason) {
+  function handleAlertCloseSave(event, reason) {
     if (reason === 'clickaway') {
       return;
     }
@@ -143,8 +158,16 @@ function TreeContent({ treeData, setTreeData, query, addQA }) {
     setSaveSuccess(false);
   };
 
+  function handleAlertCloseTrainSearchSystem(event, reason) {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setTrainSearchSystemError(false);
+    setTrainSearchSystemSuccess(false);
+  };
+
   const TreeAlert = ({ value, handleAlertClose, type, message }) => (
-    < Snackbar open={value} autoHideDuration={5000} onClose={handleAlertClose} >
+    <Snackbar open={value} autoHideDuration={5000} onClose={handleAlertClose} >
       <Alert onClose={handleAlertClose} severity={type} >
         {message}
       </Alert>
@@ -178,24 +201,33 @@ function TreeContent({ treeData, setTreeData, query, addQA }) {
       }
 
       <div className={classes.treeArea}>
-        <div className={classes.treeButtons}>
-          <Button variant="outlined" color="primary" endIcon={<AddIcon />} onClick={handleInsertQuery}>
-            {'Insert query'}
+        <div>
+          <Button style={{ float: 'left' }} variant="outlined" color="primary" endIcon={trainSearchSystem ? <CircularProgress size='1rem' /> : <AutorenewIcon />} onClick={handleTrainSearchSystem} disabled={trainSearchSystem}>
+            {'Train search system'}
           </Button>
 
-          <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<ClearIcon />} onClick={handleClearTree}>
+          <Button style={{ float: 'right', marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<SaveIcon />} onClick={handleSaveTree} disabled={saveTree}>
+            {saveTree ? 'Saving' : 'Save'}
+          </Button>
+
+          <Button style={{ float: 'right', marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<ClearIcon />} onClick={handleClearTree}>
             {'Clear'}
           </Button>
 
-          <Button style={{ marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<SaveIcon />} onClick={handleSaveTree} disabled={send}>
-            {send ? 'Saving' : 'Save'}
+          <Button style={{ float: 'right', marginLeft: '2vh' }} variant="outlined" color="primary" endIcon={<AddIcon />} onClick={handleInsertQuery}>
+            {'Insert query'}
           </Button>
         </div>
 
         <div className={classes.sortableTree}>
-          <TreeAlert value={saveError} handleAlertClose={handleAlertClose} type={"error"} message={"Tree could not be saved"} />
-          <TreeAlert value={savesuccess} handleAlertClose={handleAlertClose} type={"success"} message={"Tree was saved successfully"} />
+          <TreeAlert value={trainSearchSystemError} handleAlertClose={handleAlertCloseTrainSearchSystem} type={"error"} message={"Failed to training search system"} />
+          <TreeAlert value={trainSearchSystemSuccess} handleAlertClose={handleAlertCloseTrainSearchSystem} type={"success"} message={"Search system was trained using the explanation trees"} />
+
+          <TreeAlert value={saveError} handleAlertClose={handleAlertCloseSave} type={"error"} message={"Tree could not be saved"} />
+          <TreeAlert value={saveSuccess} handleAlertClose={handleAlertCloseSave} type={"success"} message={"Tree was saved successfully"} />
+
           <AddChildTreeModal openModal={configModal.openModal} handleSubmitModal={handleSubmitModal} handleCloseModal={handleCloseModal} />
+
           <SortableTree
             treeData={treeData}
             dndType={nodeTypeData}

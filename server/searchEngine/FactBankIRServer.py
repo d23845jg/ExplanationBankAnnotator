@@ -169,6 +169,10 @@ class MyHandler(BaseHTTPRequestHandler):
         if url.path == '/search' and 'query' in fields:
             self._send_headers()
             self.wfile.write(json.dumps(retrieve_fact.retrieve(fields['query'][0])).encode('utf-8'))
+        
+        elif url.path == '/search' and 'train' in fields and fields['train'][0] == 'true':
+            self._send_headers()
+            self.wfile.write("GET request for {}".format(self.path).encode('utf-8'))
 
         elif url.path == '/embedding' and 'statement' in fields:
             self._send_headers()
