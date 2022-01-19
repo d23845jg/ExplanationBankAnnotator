@@ -25,12 +25,10 @@ class RetrieveFact:
     def __init__(
         self, query_tok_path, query_ber_path, context_tok_path, context_ber_path
     ):
-    
-        # query_tok, query_ber = torch.load(query_tok_path), torch.load(query_ber_path)
-        query_tok, query_ber = DPRQuestionEncoderTokenizer.from_pretrained(query_tok_path), torch.load(query_ber_path)
+        self.query_tok, self.query_ber = DPRQuestionEncoderTokenizer.from_pretrained(query_tok_path), torch.load(query_ber_path)
         print("Quey BERT model loaded")
-        # context_tok, context_ber = torch.load(context_tok_path), torch.load(context_ber_path)
-        context_tok, context_ber = DPRContextEncoderTokenizer.from_pretrained(context_tok_path),DPRContextEncoder.from_pretrained(context_ber_path)
+        
+        self.context_tok, self.context_ber = DPRContextEncoderTokenizer.from_pretrained(context_tok_path),DPRContextEncoder.from_pretrained(context_ber_path)
         print("Context BERT model loaded")
 
     def retrieve(self, query):
