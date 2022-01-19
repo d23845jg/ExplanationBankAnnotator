@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from transformers import BertModel, BertTokenizer
+from transformers import DPRContextEncoder, DPRContextEncoderTokenizer, DPRQuestionEncoder, DPRQuestionEncoderTokenizer
 
 
 class Model(nn.Module):
@@ -19,7 +19,7 @@ class Model(nn.Module):
 
     def forward(self, queries, context_vectors, labels):
         query_vectors = self.bert(
-            **queries, output_attentions=False, output_hidden_states=False
+            queries['input_ids']
         ).pooler_output
         loss = self.loss(query_vectors, context_vectors, labels * 2 - 1)
         return loss
@@ -65,7 +65,7 @@ class InputSequence:
             )
             self.context_vectors.append(
                 context_ber(
-                    **batch_input, output_attentions=False, output_hidden_states=False
+                    batch_input['input_ids']
                 )
                 .pooler_output.cpu()
                 .detach()
@@ -112,10 +112,10 @@ class FineTuning:
         context_ber_path,
     ):
         # query_tok, query_ber = torch.load(query_tok_path), torch.load(query_ber_path)
-        query_tok, query_ber = BertTokenizer.from_pretrained(query_tok_path), BertModel.from_pretrained(query_ber_path)
+        query_tok, query_ber = DPRQuestionEncoderTokenizer.from_pretrained(query_tok_path), torch.load(query_ber_path)
         print("Quey BERT model loaded")
         # context_tok, context_ber = torch.load(context_tok_path), torch.load(context_ber_path)
-        context_tok, context_ber = BertTokenizer.from_pretrained(context_tok_path), BertModel.from_pretrained(context_ber_path)
+        context_tok, context_ber = DPRContextEncoderTokenizer.from_pretrained(context_tok_path),DPRContextEncoder.from_pretrained(context_ber_path)
         print("Context BERT model loaded")
 
         query, statement, label = [], [], []
@@ -123,6 +123,15 @@ class FineTuning:
             file_path = join(train_data_path, file)
             if isfile(file_path):
                 train_df = pd.read_csv(file_path)
+                
+                #balance the training data
+                true_df=train_df[train_df.label==1]
+                false_df=train_df[train_df.label==0]
+                if len(true_df)<len(false_df):
+                    train_df=pd.concat([true_df]*int(len(false_df)/len(true_df))+[false_df],axis=0)
+                elif len(true_df)>len(false_df):
+                    train_df=pd.concat([true_df]+[false_df]*int(len(true_df)/len(false_df)),axis=0)
+                
                 query += train_df.question.tolist()
                 statement += train_df.statement.tolist()
                 label += train_df.label.tolist()
@@ -151,5 +160,5 @@ class FineTuning:
                 optimizer.step()
             print(epoch+1,1.0*loss_sum/loss_count,end='\n' if epoch==0 or epoch+1==total_epoch_num or (epoch+1)%1==0 else '\r')
 
-        # torch.save(model.bert, query_ber_path)
-        model.bert.save_pretrained(query_ber_path)
+        torch.save(model.bert, query_ber_path)
+        #model.bert.save_pretrained(query_ber_path)

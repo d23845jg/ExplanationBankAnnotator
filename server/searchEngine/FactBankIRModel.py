@@ -4,7 +4,7 @@ import numpy as np
 import requests
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
-from transformers import BertModel, BertTokenizer
+from transformers import DPRContextEncoder, DPRContextEncoderTokenizer, DPRQuestionEncoder, DPRQuestionEncoderTokenizer
 
 
 # Mean Pooling - Take attention mask into account for correct averaging
@@ -25,12 +25,12 @@ class RetrieveFact:
     def __init__(
         self, query_tok_path, query_ber_path, context_tok_path, context_ber_path
     ):
-        # self.query_tok, self.query_ber = torch.load(query_tok_path), torch.load(query_ber_path)
-        self.query_tok, self.query_ber = BertTokenizer.from_pretrained(query_tok_path), BertModel.from_pretrained(query_ber_path)
+    
+        # query_tok, query_ber = torch.load(query_tok_path), torch.load(query_ber_path)
+        query_tok, query_ber = DPRQuestionEncoderTokenizer.from_pretrained(query_tok_path), torch.load(query_ber_path)
         print("Quey BERT model loaded")
-
-        # self.context_tok, self.context_ber = torch.load(context_tok_path), torch.load(context_ber_path)
-        self.context_tok, self.context_ber = BertTokenizer.from_pretrained(context_tok_path), BertModel.from_pretrained(context_ber_path)
+        # context_tok, context_ber = torch.load(context_tok_path), torch.load(context_ber_path)
+        context_tok, context_ber = DPRContextEncoderTokenizer.from_pretrained(context_tok_path),DPRContextEncoder.from_pretrained(context_ber_path)
         print("Context BERT model loaded")
 
     def retrieve(self, query):
@@ -38,9 +38,9 @@ class RetrieveFact:
             [query], padding=True, truncation=True, max_length=512, return_tensors="pt"
         )
         with torch.no_grad():
-            model_output = self.query_ber(**encoded_input)
+            model_output = self.query_ber(encoded_input['input_ids'])
         query_embedding = (
-            mean_pooling(model_output, encoded_input["attention_mask"]).detach().numpy()
+            model_output.pooler_output.detach().numpy()
         )
 
         all_facts_with_embeddings = requests.get("http://fact-curation:8081/facts").json()
@@ -88,12 +88,9 @@ class RetrieveFact:
             return_tensors="pt",
         )
         with torch.no_grad():
-            model_output = self.context_ber(**encoded_input)
+            model_output = self.context_ber(encoded_input['input_ids'])
         query_embedding = (
-            mean_pooling(model_output, encoded_input["attention_mask"])
-            .detach()
-            .numpy()
-            .tolist()
+            model_output.pooler_output.detach().numpy().tolist()
         )
 
         return {"Embedding": query_embedding}

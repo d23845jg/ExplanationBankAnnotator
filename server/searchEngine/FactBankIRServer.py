@@ -15,10 +15,10 @@ query_ber_fine_tuning = FineTuning()
 
 # Retrieve Fact ----------------------------------------------------------------------------------------------------------------------------------------
 retrieve_fact = RetrieveFact(
-    query_tok_path="./model/query/tokenizer",
-    query_ber_path="./model/query/bert",
-    context_tok_path="./model/context/tokenizer",
-    context_ber_path="./model/context/bert",
+    query_tok_path="facebook/dpr-question_encoder-multiset-base",
+    query_ber_path="./model/query/bert/dpr-question_encoder_finetuned.pt",
+    context_tok_path="facebook/dpr-ctx_encoder-multiset-base",
+    context_ber_path="facebook/dpr-ctx_encoder-multiset-base"
 )
 
 # Pre-Process Tree -------------------------------------------------------------------------------------------------------------------------------------
@@ -123,10 +123,10 @@ class MyHandler(BaseHTTPRequestHandler):
             query_ber_fine_tuning.train(
                 train_data_path="./data/data_train/csv",
                 used_data_path="./data/data_used/csv",
-                query_tok_path="./model/query/tokenizer",
-                query_ber_path="./model/query/bert",
-                context_tok_path="./model/context/tokenizer",
-                context_ber_path="./model/context/bert"
+                query_tok_path="facebook/dpr-question_encoder-multiset-base",
+                query_ber_path="./model/query/bert/dpr-question_encoder_finetuned.pt",
+                context_tok_path="facebook/dpr-ctx_encoder-multiset-base",
+                context_ber_path="facebook/dpr-ctx_encoder-multiset-base"
             )
 
         elif url.path == "/embedding" and "statement" in fields:
