@@ -7,3 +7,4 @@ server/searchEngine/model/context/tokenizer/tokenizer_config.json filter=lfs dif
 server/searchEngine/model/context/tokenizer/vocab.txt filter=lfs diff=lfs merge=lfs -text
 server/searchEngine/model/context/bert/config.json filter=lfs diff=lfs merge=lfs -text
 server/searchEngine/model/context/bert/pytorch_model.bin filter=lfs diff=lfs merge=lfs -text
+*.pt filter=lfs diff=lfs merge=lfs -text
