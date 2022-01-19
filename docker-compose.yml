@@ -6,7 +6,6 @@ services:
       - ./server/factCuration/mongodb:/data/db
     ports:
       - 27017:27017
-
   fact-curation:
     build: ./server/factCuration
     volumes:
@@ -15,7 +14,6 @@ services:
       - 8081:8081
     depends_on:
       - mongo
-
   search-engine:
     build: ./server/searchEngine
     volumes:
@@ -34,7 +32,6 @@ services:
     #         count: 1
     #         # device_ids: ['0']
     #         capabilities: [gpu]
-
   web:
     build: ./ui
     volumes:
@@ -48,5 +45,5 @@ services:
     ports:
       - 3000:3000
     depends_on:
-      - searchEngine
-      - factCuration
+      - search-engine
+      - fact-curation
