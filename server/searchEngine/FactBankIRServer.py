@@ -118,6 +118,8 @@ class MyHandler(BaseHTTPRequestHandler):
         elif (
             url.path == "/search" and "train" in fields and fields["train"][0] == "true"
         ):
+            self._send_headers()
+            self.wfile.write("GET request for {}".format(self.path).encode("utf-8"))
             query_ber_fine_tuning.train(
                 train_data_path="./data/data_train/csv",
                 used_data_path="./data/data_used/csv",
@@ -126,8 +128,6 @@ class MyHandler(BaseHTTPRequestHandler):
                 context_tok_path="facebook/dpr-ctx_encoder-multiset-base",
                 context_ber_path="facebook/dpr-ctx_encoder-multiset-base"
             )
-            self._send_headers()
-            self.wfile.write("GET request for {}".format(self.path).encode("utf-8"))
 
         elif url.path == "/embedding" and "statement" in fields:
             self._send_headers()
