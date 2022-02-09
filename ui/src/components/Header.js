@@ -35,7 +35,7 @@ function Header() {
         <Toolbar>
           <Typography className={classes.title} variant='h6' noWrap>
             <Link href="/" className={classes.link}>
-              Explanation Bank Annotator Project
+              Explanation Bank Annotator
             </Link>
           </Typography>
         </Toolbar>
