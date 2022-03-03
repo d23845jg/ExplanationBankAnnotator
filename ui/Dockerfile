@@ -9,7 +9,7 @@
 # Build stage
 FROM node:16 as build
 WORKDIR /app/web
-COPY package*.json /app/web
+COPY package*.json /app/web/
 RUN npm ci --production
 COPY . /app/web
 RUN npm run build
