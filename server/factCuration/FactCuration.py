@@ -65,6 +65,7 @@ curation_fact = CurationFact()
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 import json
+import threading
 
 
 class MyHandler(BaseHTTPRequestHandler):
@@ -121,7 +122,11 @@ class MyHandler(BaseHTTPRequestHandler):
             and fields["type"][0] == "explanationBank"
         ):
             post_data = self.rfile.read(content_length).decode("utf-8")
-            curation_fact.save_all(post_data)
+            
+            # curation_fact.save_all(post_data)
+            thread = threading.Thread(target=curation_fact.save_all, args=(post_data,))
+            thread.start()
+        
             self._send_headers()
             self.wfile.write("POST request for {}".format(self.path).encode("utf-8"))
             return

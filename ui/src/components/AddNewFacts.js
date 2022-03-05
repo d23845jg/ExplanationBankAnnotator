@@ -65,7 +65,7 @@ function AddNewFacts() {
   return (
     <div className={classes.page}>
       <TreeAlert value={error} handleAlertClose={handleAlertClose} type={"error"} message={"File could not be saved"} />
-      <TreeAlert value={success} handleAlertClose={handleAlertClose} type={"success"} message={"File was saved successfully"} />
+      <TreeAlert value={success} handleAlertClose={handleAlertClose} type={"success"} message={"File was successfully received, it will take a couple of minutes to be processed"} />
 
       <Typography variant="body1">
         Please upload a csv file that contains your explanation bank information.
